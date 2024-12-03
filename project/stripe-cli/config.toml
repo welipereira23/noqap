@@ -1,0 +1,5 @@
+[stripe]
+api_key = "sk_test_51QPiAhE1aaa3UksGB7ubJAYdeoTmdBQQfX2Vdbr5048Mkq"
+
+[webhooks]
+signing_secret = "whsec_dXUV10wlorGfRnZmnZuC7kIEynVrzY96"
