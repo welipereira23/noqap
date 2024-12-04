@@ -31,7 +31,7 @@ export function useAuth() {
           name: userData.name,
         });
 
-        navigate('/dashboard');
+        navigate('/');
       }
     } catch (error) {
       errorLogger.logError(error as Error, 'Auth:signIn');
