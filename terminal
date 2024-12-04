@@ -1,0 +1,28 @@
+mkdir vercel-cli
+cd vercel-cli
+npm init -y
+npm install commander axios dotenv ora chalk inquirer 
+npm i -g vercel
+vercel login 
+vercel logs seu-projeto.vercel.app 
+vercel inspect seu-projeto.vercel.app --logs
+vercel builds
+vercel project ls
+vercel project info seu-projeto
+vercel-cli health
+vercel env ls
+vercel logs -f
+vercel logs
+vercel ls
+vercel logs <url-do-seu-projeto>.vercel.app --build
+vercel logs <url-do-seu-projeto>.vercel.app -f
+vercel link
+vercel env pull
+vercel env pull .env
+vercel
+vercel logs noqap.vercel.app
+vercel inspect noqap.vercel.app
+vercel whoami
+vercel logout
+vercel login
+vercel teams ls
