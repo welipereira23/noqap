@@ -7,8 +7,14 @@ import { checkEnvVars } from './utils/env';
 
 async function initializeApp() {
   try {
+    console.log('=== Initialization Debug ===');
+    console.log('Environment:', import.meta.env.MODE);
+    console.log('Base URL:', import.meta.env.BASE_URL);
+    console.log('API URL:', import.meta.env.VITE_API_URL);
+    
     // Verificar variáveis de ambiente
     await checkEnvVars();
+    console.log('Environment variables validated');
 
     const rootElement = document.getElementById('root');
     
@@ -16,6 +22,7 @@ async function initializeApp() {
       throw new Error('Root element not found');
     }
 
+    console.log('Root element found');
     const root = createRoot(rootElement);
     
     root.render(
@@ -26,28 +33,32 @@ async function initializeApp() {
       </StrictMode>
     );
 
-    console.log('App initialized successfully');
+    console.log('App rendered successfully');
   } catch (error) {
     console.error('Failed to initialize app:', error);
     // Mostrar erro para o usuário de forma amigável
-    const rootElement = document.getElementById('root');
-    if (rootElement) {
-      rootElement.innerHTML = `
-        <div style="padding: 20px; text-align: center; font-family: system-ui;">
-          <h1>Oops! Something went wrong</h1>
-          <p>We're having trouble loading the application. Please try again later.</p>
-          ${import.meta.env.DEV ? `<pre style="text-align: left; background: #f5f5f5; padding: 10px; border-radius: 4px;">${error}</pre>` : ''}
+    const rootElement = document.getElementById('root') || document.body;
+    rootElement.innerHTML = `
+      <div style="padding: 20px; text-align: center; font-family: system-ui;">
+        <h1>Oops! Something went wrong</h1>
+        <p>We're having trouble loading the application. Please try again later.</p>
+        <div style="margin-top: 20px; padding: 10px; background: #f5f5f5; border-radius: 4px; text-align: left;">
+          <strong>Debug Information:</strong>
+          <pre style="margin: 10px 0;">${error instanceof Error ? error.message : 'Unknown error'}</pre>
+          ${import.meta.env.DEV ? `<pre style="margin: 10px 0;">${error instanceof Error ? error.stack : ''}</pre>` : ''}
         </div>
-      `;
-    }
+      </div>
+    `;
   }
 }
 
 // Aguardar o DOM estar completamente carregado
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOMContentLoaded event fired');
     initializeApp();
   });
 } else {
+  console.log('DOM already loaded');
   initializeApp();
 }
