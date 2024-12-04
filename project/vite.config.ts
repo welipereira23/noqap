@@ -12,6 +12,7 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
+    sourcemap: true,
     assetsDir: 'assets',
     emptyOutDir: true,
     rollupOptions: {
@@ -19,10 +20,18 @@ export default defineConfig({
         main: path.resolve(__dirname, 'index.html'),
       },
       output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-slot'],
+        },
         entryFileNames: 'assets/[name]-[hash].js',
         chunkFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]'
       }
     }
+  },
+  server: {
+    host: true,
+    strictPort: false,
   }
 });
