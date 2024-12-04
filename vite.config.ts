@@ -16,6 +16,7 @@ export default defineConfig({
     assetsDir: 'assets',
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
+      external: ['jspdf'],
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
