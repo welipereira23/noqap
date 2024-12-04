@@ -11,7 +11,7 @@ import { NonAccountingDayModal } from '../modals/NonAccountingDayModal';
 import { useStore } from '../../store/useStore';
 import { formatHoursDuration } from '../../utils/dateUtils';
 import { calculateMonthlyStats } from '../../utils/time/monthly';
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 
 export function MonthPage() {
   const { year = new Date().getFullYear(), month = new Date().getMonth() + 1 } = useParams();
