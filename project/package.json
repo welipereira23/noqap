@@ -8,6 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "postbuild": "echo '/* /index.html 200' > dist/_redirects",
     "stripe:webhook": "powershell -File .\\scripts\\start-stripe-webhook.ps1",
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",
