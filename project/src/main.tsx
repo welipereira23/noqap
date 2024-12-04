@@ -3,24 +3,35 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App.tsx';
 import './index.css';
-import { logger } from './utils/logger';
 
-// Iniciar diagnóstico
-logger.runDiagnostics().catch(error => {
-  console.error('Failed to run diagnostics:', error);
-});
+function initializeApp() {
+  const rootElement = document.getElementById('root');
+  
+  if (!rootElement) {
+    console.error('Root element not found');
+    return;
+  }
 
-const rootElement = document.getElementById('root');
+  try {
+    const root = createRoot(rootElement);
+    
+    root.render(
+      <StrictMode>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </StrictMode>
+    );
 
-if (!rootElement) {
-  logger.error('Root element not found');
-  throw new Error('Root element not found');
+    console.log('App initialized successfully');
+  } catch (error) {
+    console.error('Failed to initialize app:', error);
+  }
 }
 
-createRoot(rootElement).render(
-  <StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
-  </StrictMode>
-);
+// Aguardar o DOM estar completamente carregado
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeApp);
+} else {
+  initializeApp();
+}
