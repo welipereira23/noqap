@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import { Card } from '../ui/card';
-import { useStore } from '../../store/useStore';
+import { useData } from '../../hooks/useData';
 import { formatMonthBR, formatHoursDuration } from '../../utils/dateUtils';
 import { calculateMonthlyStats } from '../../utils/time/monthly';
 import { errorLogger } from '../../utils/errorLog';
@@ -14,7 +14,7 @@ interface MonthListProps {
 
 export function MonthList({ currentDate }: MonthListProps) {
   const navigate = useNavigate();
-  const { shifts, nonAccountingDays } = useStore();
+  const { shifts, nonAccountingDays } = useData();
   const currentYear = currentDate.getFullYear();
   const today = new Date();
   

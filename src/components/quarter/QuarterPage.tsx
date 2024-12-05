@@ -2,7 +2,7 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import { startOfQuarter, endOfQuarter } from 'date-fns';
-import { useStore } from '../../store/useStore';
+import { useData } from '../../hooks/useData';
 import { calculatePeriodStats } from '../../utils/time/period';
 import { formatQuarterBR, formatHoursDuration } from '../../utils/dateUtils';
 import { Card } from '../ui/card';
@@ -10,7 +10,7 @@ import { Card } from '../ui/card';
 export function QuarterPage() {
   const { year = '', quarter = '' } = useParams();
   const navigate = useNavigate();
-  const { shifts, nonAccountingDays } = useStore();
+  const { shifts, nonAccountingDays } = useData();
 
   const quarterDate = new Date(parseInt(year), (parseInt(quarter) - 1) * 3, 1);
   const quarterStart = startOfQuarter(quarterDate);

@@ -9,7 +9,7 @@ import { ShiftList } from './ShiftList';
 import { NonAccountingDayList } from './NonAccountingDayList';
 import { ShiftModal } from '../modals/ShiftModal';
 import { NonAccountingDayModal } from '../modals/NonAccountingDayModal';
-import { useStore } from '../../store/useStore';
+import { useData } from '../../hooks/useData';
 import { formatHoursDuration } from '../../utils/dateUtils';
 import { calculateMonthlyStats } from '../../utils/time/monthly';
 import { calculateDuration } from '../../utils/time/duration';
@@ -18,7 +18,7 @@ import { generateMonthReport } from '../../utils/pdf/monthReport';
 export function MonthPage() {
   const { year = new Date().getFullYear(), month = new Date().getMonth() + 1 } = useParams();
   const navigate = useNavigate();
-  const { shifts, nonAccountingDays } = useStore();
+  const { shifts, nonAccountingDays } = useData();
   const [isShiftModalOpen, setIsShiftModalOpen] = useState(false);
   const [isNonAccountingModalOpen, setIsNonAccountingModalOpen] = useState(false);
   const [showRecordOptions, setShowRecordOptions] = useState(false);

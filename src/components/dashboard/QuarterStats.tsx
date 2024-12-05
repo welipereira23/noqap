@@ -3,7 +3,7 @@ import { ChevronDown, Calendar, Clock } from 'lucide-react';
 import { addMonths, startOfQuarter, endOfQuarter } from 'date-fns';
 import { Card, CardContent } from '../ui/card';
 import { formatQuarterBR, formatHoursDuration } from '../../utils/dateUtils';
-import { useStore } from '../../store/useStore';
+import { useData } from '../../hooks/useData';
 import { calculatePeriodStats } from '../../utils/time/period';
 import { errorLogger } from '../../utils/errorLog';
 
@@ -13,7 +13,7 @@ interface QuarterStatsProps {
 }
 
 export function QuarterStats({ currentDate, onDateChange }: QuarterStatsProps) {
-  const { shifts, nonAccountingDays } = useStore();
+  const { shifts, nonAccountingDays } = useData();
   
   const quarterStart = startOfQuarter(currentDate);
   const quarterEnd = endOfQuarter(currentDate);

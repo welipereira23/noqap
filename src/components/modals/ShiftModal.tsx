@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { Clock } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { useStore } from '../../store/useStore';
+import { useData } from '../../hooks/useData';
 import { generateId } from '../../utils/generateId';
 import { calculateDuration } from '../../utils/time/duration';
 import { formatHoursDuration } from '../../utils/dateUtils';
@@ -25,7 +26,7 @@ export function ShiftModal({ isOpen, onClose, editingShift, defaultDate = new Da
   console.log('Editing Shift:', editingShift);
   console.log('Modal Classes:', "w-[95vw] sm:w-[425px] p-0 overflow-hidden");
 
-  const addShift = useStore((state) => state.addShift);
+  const { addShift: addShiftMutation } = useData();
   const updateShift = useStore((state) => state.updateShift);
   const [duration, setDuration] = useState<number | null>(null);
   const [nightHours, setNightHours] = useState<number>(0);
@@ -65,10 +66,7 @@ export function ShiftModal({ isOpen, onClose, editingShift, defaultDate = new Da
     if (editingShift) {
       updateShift(editingShift.id, shiftData);
     } else {
-      addShift({
-        id: generateId(),
-        ...shiftData
-      });
+      addShiftMutation(shiftData);
     }
 
     onClose();

@@ -4,7 +4,7 @@ import { ptBR } from 'date-fns/locale';
 import { Calendar, Trash2, Edit } from 'lucide-react';
 import { Card } from '../ui/card';
 import { ConfirmationDialog } from '../ui/confirmation-dialog';
-import { useStore } from '../../store/useStore';
+import { useData } from '../../hooks/useData';
 import { isWithinInterval, startOfMonth, endOfMonth } from 'date-fns';
 
 interface NonAccountingDayListProps {
@@ -13,7 +13,7 @@ interface NonAccountingDayListProps {
 }
 
 export function NonAccountingDayList({ monthStart }: NonAccountingDayListProps) {
-  const { nonAccountingDays, removeNonAccountingDay } = useStore();
+  const { nonAccountingDays, deleteNonAccountingDay } = useData();
   const [deleteDayId, setDeleteDayId] = useState<string | null>(null);
   const start = startOfMonth(monthStart);
   const end = endOfMonth(monthStart);
@@ -31,7 +31,7 @@ export function NonAccountingDayList({ monthStart }: NonAccountingDayListProps) 
 
   const handleConfirmDelete = () => {
     if (deleteDayId) {
-      removeNonAccountingDay(deleteDayId);
+      deleteNonAccountingDay(deleteDayId);
       setDeleteDayId(null);
     }
   };

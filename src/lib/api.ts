@@ -8,7 +8,10 @@ import { Database } from '../types/supabase';
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
+      staleTime: 0, // Always fetch fresh data
+      refetchOnMount: true,
+      refetchOnWindowFocus: true,
+      refetchOnReconnect: true,
       retry: 1
     }
   }
@@ -68,25 +71,47 @@ export async function getSubscription(userId: string) {
 }
 
 export async function getShifts(userId: string) {
-  const { data, error } = await supabase
-    .from('shifts')
-    .select('*')
-    .eq('user_id', userId)
-    .order('start_time', { ascending: false });
+  console.log('Buscando shifts para o usuário:', userId);
+  try {
+    const { data, error } = await supabase
+      .from('shifts')
+      .select('*')
+      .eq('user_id', userId)
+      .order('start_time', { ascending: false });
 
-  if (error) throw error;
-  return data;
+    if (error) {
+      console.error('Erro ao buscar shifts:', error);
+      throw error;
+    }
+
+    console.log('Shifts encontrados:', data?.length || 0);
+    return data || [];
+  } catch (error) {
+    console.error('Erro inesperado ao buscar shifts:', error);
+    throw error;
+  }
 }
 
 export async function getNonAccountingDays(userId: string) {
-  const { data, error } = await supabase
-    .from('non_accounting_days')
-    .select('*')
-    .eq('user_id', userId)
-    .order('date', { ascending: false });
+  console.log('Buscando dias não contabilizados para o usuário:', userId);
+  try {
+    const { data, error } = await supabase
+      .from('non_accounting_days')
+      .select('*')
+      .eq('user_id', userId)
+      .order('date', { ascending: false });
 
-  if (error) throw error;
-  return data;
+    if (error) {
+      console.error('Erro ao buscar dias não contabilizados:', error);
+      throw error;
+    }
+
+    console.log('Dias não contabilizados encontrados:', data?.length || 0);
+    return data || [];
+  } catch (error) {
+    console.error('Erro inesperado ao buscar dias não contabilizados:', error);
+    throw error;
+  }
 }
 
 export async function createShift(userId: string, shift: {
@@ -102,7 +127,7 @@ export async function createShift(userId: string, shift: {
       end_time: shift.endTime.toISOString(),
       description: shift.description
     })
-    .select()
+    .select('*')
     .single();
 
   if (error) throw error;
@@ -122,7 +147,31 @@ export async function createNonAccountingDay(userId: string, day: {
       type: day.type,
       reason: day.reason
     })
-    .select()
+    .select('*')
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteShift(shiftId: string) {
+  const { data, error } = await supabase
+    .from('shifts')
+    .delete()
+    .eq('id', shiftId)
+    .select('*')
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteNonAccountingDay(dayId: string) {
+  const { data, error } = await supabase
+    .from('non_accounting_days')
+    .delete()
+    .eq('id', dayId)
+    .select('*')
     .single();
 
   if (error) throw error;

@@ -2,10 +2,10 @@ import React from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar, Trash2 } from 'lucide-react';
-import { useStore } from '../../store/useStore';
+import { useData } from '../../hooks/useData';
 
 export function NonAccountingDayList() {
-  const { nonAccountingDays, removeNonAccountingDay } = useStore();
+  const { nonAccountingDays, deleteNonAccountingDay } = useData();
 
   return (
     <div className="bg-white shadow rounded-lg p-6">
@@ -32,7 +32,7 @@ export function NonAccountingDayList() {
                 <p className="text-sm text-gray-600 mt-1">{day.reason}</p>
               </div>
               <button
-                onClick={() => removeNonAccountingDay(day.id)}
+                onClick={() => deleteNonAccountingDay(day.id)}
                 className="text-red-600 hover:text-red-800"
               >
                 <Trash2 className="h-4 w-4" />
