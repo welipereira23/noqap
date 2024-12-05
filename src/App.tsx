@@ -52,19 +52,27 @@ function AppContent() {
         closeButton
       />
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+        {/* Public Routes */}
+        <Route path="/login" element={
+          user ? <Navigate to="/" replace /> : <LoginPage />
+        } />
+        <Route path="/register" element={
+          user ? <Navigate to="/" replace /> : <RegisterPage />
+        } />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/subscription/success" element={<SuccessPage />} />
         <Route path="/subscription/cancel" element={<CancelPage />} />
-        <Route element={<PrivateRoute><Layout /></PrivateRoute>}>
+
+        {/* Protected Routes */}
+        <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
           <Route index element={<Dashboard />} />
           <Route path="month/:year/:month" element={<MonthPage />} />
           <Route path="quarter/:year/:quarter" element={<QuarterPage />} />
           <Route path="subscription" element={<SubscriptionPage />} />
         </Route>
-        <Route path="/" element={<Navigate to="/login" />} />
-        <Route path="*" element={<Navigate to="/login" />} />
+
+        {/* Catch all route */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
   );

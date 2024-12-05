@@ -3,12 +3,10 @@ import { useNavigate, Outlet } from 'react-router-dom';
 import { Clock, LogOut } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { Tabs } from './common/Tabs';
+import { supabase } from '../lib/api';
+import { toast } from 'sonner';
 
-interface LayoutProps {
-  children: React.ReactNode;
-}
-
-export function Layout({ children }: LayoutProps) {
+export function Layout() {
   const navigate = useNavigate();
   const { user, setUser } = useStore();
   const currentPath = window.location.pathname;
@@ -16,18 +14,25 @@ export function Layout({ children }: LayoutProps) {
   console.log('=== Layout Debug ===');
   console.log('User:', user);
   console.log('Current Path:', currentPath);
-  console.log('Has Children:', !!children);
 
-  const handleLogout = () => {
-    setUser(null);
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      setUser(null);
+      navigate('/login');
+    } catch (error) {
+      console.error('Error logging out:', error);
+      toast.error('Erro ao fazer logout. Tente novamente.');
+    }
   };
 
   const tabs = [
     {
       id: 'dashboard',
       label: 'Dashboard',
-      path: '/dashboard',
+      path: '/',
     },
     {
       id: 'subscription',
@@ -61,8 +66,8 @@ export function Layout({ children }: LayoutProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
           <Tabs
             tabs={tabs}
-            activeTab={currentPath.split('/')[1]}
-            onChange={(tabId) => navigate(`/${tabId}`)}
+            activeTab={currentPath === '/' ? 'dashboard' : currentPath.split('/')[1]}
+            onChange={(tabId) => navigate(tabId === 'dashboard' ? '/' : `/${tabId}`)}
           />
         </div>
       </header>

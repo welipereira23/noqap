@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Download, Calendar, Clock } from 'lucide-react';
-import { format } from 'date-fns';
+import { ArrowLeft, Plus, Download, Calendar, Clock, Loader2 } from 'lucide-react';
+import { format, isWithinInterval, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { toast } from 'sonner';
 import { Card } from '../ui/card';
 import { ShiftList } from './ShiftList';
 import { NonAccountingDayList } from './NonAccountingDayList';
@@ -11,7 +12,8 @@ import { NonAccountingDayModal } from '../modals/NonAccountingDayModal';
 import { useStore } from '../../store/useStore';
 import { formatHoursDuration } from '../../utils/dateUtils';
 import { calculateMonthlyStats } from '../../utils/time/monthly';
-import { jsPDF } from 'jspdf';
+import { calculateDuration } from '../../utils/time/duration';
+import { generateMonthReport } from '../../utils/pdf/monthReport';
 
 export function MonthPage() {
   const { year = new Date().getFullYear(), month = new Date().getMonth() + 1 } = useParams();
@@ -29,99 +31,15 @@ export function MonthPage() {
     try {
       setIsExporting(true);
       
-      const doc = new jsPDF();
-      const monthName = format(currentDate, 'MMMM yyyy', { locale: ptBR });
+      const doc = generateMonthReport(currentDate, stats, shifts, nonAccountingDays);
       
-      // Title
-      doc.setFontSize(20);
-      doc.text(`Relatório de Horas - ${monthName}`, 20, 20);
-      
-      // Stats
-      doc.setFontSize(14);
-      doc.text('Resumo do Mês', 20, 40);
-      
-      doc.setFontSize(12);
-      doc.text(`Total de Dias: ${stats.days.total}`, 20, 50);
-      doc.text(`Dias Não Contábeis: ${stats.days.nonAccounting}`, 20, 60);
-      doc.text(`Dias a Trabalhar: ${stats.days.effective}`, 20, 70);
-      
-      doc.text(`Horas Previstas: ${formatHoursDuration(stats.minutes.expected)}`, 20, 90);
-      doc.text(`Horas Trabalhadas: ${formatHoursDuration(stats.minutes.worked)}`, 20, 100);
-      doc.text(`Saldo: ${formatHoursDuration(stats.minutes.balance)}`, 20, 110);
-      
-      // Shifts
-      if (shifts.length > 0) {
-        doc.setFontSize(14);
-        doc.text('Turnos Registrados', 20, 130);
-        
-        let y = 140;
-        const monthShifts = shifts
-          .filter(shift => isWithinInterval(shift.startTime, { 
-            start: startOfMonth(currentDate), 
-            end: endOfMonth(currentDate) 
-          }))
-          .sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
-        
-        monthShifts.forEach(shift => {
-          if (y > 270) {
-            doc.addPage();
-            y = 20;
-          }
-          
-          const duration = calculateDuration({
-            start: shift.startTime,
-            end: shift.endTime
-          });
-          
-          doc.setFontSize(12);
-          doc.text(format(shift.startTime, "dd/MM/yyyy"), 20, y);
-          doc.text(`${format(shift.startTime, 'HH:mm')} - ${format(shift.endTime, 'HH:mm')}`, 70, y);
-          doc.text(formatHoursDuration(duration.totalMinutes), 120, y);
-          
-          if (shift.description) {
-            y += 7;
-            doc.setFontSize(10);
-            doc.text(`Obs: ${shift.description}`, 25, y);
-          }
-          
-          y += 10;
-        });
-      }
-      
-      // Non-accounting days
-      const monthNonAccountingDays = nonAccountingDays
-        .filter(day => isWithinInterval(day.date, { 
-          start: startOfMonth(currentDate), 
-          end: endOfMonth(currentDate) 
-        }))
-        .sort((a, b) => a.date.getTime() - b.date.getTime());
-      
-      if (monthNonAccountingDays.length > 0) {
-        doc.addPage();
-        doc.setFontSize(14);
-        doc.text('Dias Não Contábeis', 20, 20);
-        
-        let y = 30;
-        monthNonAccountingDays.forEach(day => {
-          doc.setFontSize(12);
-          doc.text(format(day.date, "dd/MM/yyyy"), 20, y);
-          doc.text(day.type, 70, y);
-          
-          if (day.reason) {
-            y += 7;
-            doc.setFontSize(10);
-            doc.text(`Motivo: ${day.reason}`, 25, y);
-          }
-          
-          y += 10;
-        });
-      }
-      
-      // Save the PDF
+      // Salvar o PDF
       doc.save(`relatorio-${format(currentDate, 'yyyy-MM')}.pdf`);
+      
+      toast.success('Relatório exportado com sucesso!');
     } catch (error) {
-      console.error('Error generating PDF:', error);
-      toast.error('Erro ao gerar PDF. Tente novamente.');
+      console.error('Erro ao exportar relatório:', error);
+      toast.error('Erro ao exportar relatório');
     } finally {
       setIsExporting(false);
     }
@@ -134,7 +52,7 @@ export function MonthPage() {
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-2">
             <button
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate('/')}
               className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
             >
               <ArrowLeft className="w-5 h-5 text-slate-600" />

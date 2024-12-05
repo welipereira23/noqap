@@ -1,31 +1,19 @@
 import { startOfMonth, endOfMonth, getDaysInMonth, isWithinInterval } from 'date-fns';
 import { Shift, NonAccountingDay } from '../../types';
+import { MonthlyStats } from '../../types/stats';
 import { TIME_CONSTANTS } from './constants';
 import { calculateDuration } from './duration';
 
-interface MonthlyStats {
-  days: {
-    total: number;          // Total de dias no mês
-    nonAccounting: number;  // Dias não contábeis
-    effective: number;      // Dias efetivos (total - não contábeis)
-  };
-  minutes: {
-    expected: number;  // Minutos esperados
-    worked: number;    // Minutos trabalhados
-    balance: number;   // Saldo (trabalhado - esperado)
-  };
-}
-
 export function calculateMonthlyStats(
-  date: Date,
+  currentDate: Date,
   shifts: Shift[],
   nonAccountingDays: NonAccountingDay[]
 ): MonthlyStats {
-  const monthStart = startOfMonth(date);
-  const monthEnd = endOfMonth(date);
+  const monthStart = startOfMonth(currentDate);
+  const monthEnd = endOfMonth(currentDate);
   
   // Total de dias no mês
-  const totalDays = getDaysInMonth(date);
+  const totalDays = getDaysInMonth(currentDate);
   
   // Dias não contábeis no mês
   const nonAccountingCount = nonAccountingDays.filter(day => 
