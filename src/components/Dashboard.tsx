@@ -8,7 +8,11 @@ import { useStore } from '../store/useStore';
 import { Link } from 'react-router-dom';
 
 export function Dashboard() {
-  const [currentDate, setCurrentDate] = useState(new Date());
+  // Sempre inicializa com a data atual
+  const { currentDate, setCurrentDate } = useStore(state => ({
+    currentDate: state.currentDate,
+    setCurrentDate: state.setCurrentDate
+  }));
   const [isShiftModalOpen, setIsShiftModalOpen] = useState(false);
   const [isNonAccountingModalOpen, setIsNonAccountingModalOpen] = useState(false);
   const [showRecordOptions, setShowRecordOptions] = useState(false);

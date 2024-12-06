@@ -70,14 +70,23 @@ export async function getSubscription(userId: string) {
   return data;
 }
 
-export async function getShifts(userId: string) {
-  console.log('Buscando shifts para o usuário:', userId);
+export async function getShifts(userId: string, year?: number) {
+  console.log('Buscando shifts para o usuário:', userId, 'ano:', year);
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from('shifts')
       .select('*')
-      .eq('user_id', userId)
-      .order('start_time', { ascending: false });
+      .eq('user_id', userId);
+
+    if (year) {
+      const startDate = `${year}-01-01`;
+      const endDate = `${year}-12-31`;
+      query = query
+        .gte('start_time', startDate)
+        .lte('start_time', endDate);
+    }
+
+    const { data, error } = await query.order('start_time', { ascending: false });
 
     if (error) {
       console.error('Erro ao buscar shifts:', error);
