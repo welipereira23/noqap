@@ -45,7 +45,19 @@ export function MonthPage() {
     try {
       setIsExporting(true);
       
-      const doc = generateMonthReport(currentDate, stats, shifts, nonAccountingDays);
+      // Filtra os dados apenas do mês atual
+      const monthStart = startOfMonth(currentDate);
+      const monthEnd = endOfMonth(currentDate);
+      
+      const monthShifts = shifts.filter(shift => 
+        isWithinInterval(shift.startTime, { start: monthStart, end: monthEnd })
+      );
+      
+      const monthNonAccountingDays = nonAccountingDays.filter(day => 
+        isWithinInterval(day.date, { start: monthStart, end: monthEnd })
+      );
+      
+      const doc = generateMonthReport(currentDate, stats, monthShifts, monthNonAccountingDays);
       
       // Salvar o PDF
       doc.save(`relatorio-${format(currentDate, 'yyyy-MM')}.pdf`);
@@ -136,7 +148,7 @@ export function MonthPage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <Card className="p-6">
+          <Card className="p-6" style={{ backgroundColor: 'rgb(218, 236, 237)' }}>
             <div className="flex items-center gap-3 mb-4">
               <Calendar className="w-5 h-5 text-indigo-600" />
               <h3 className="text-lg font-semibold text-slate-800">Dias do Mês</h3>
@@ -157,7 +169,7 @@ export function MonthPage() {
             </div>
           </Card>
 
-          <Card className="p-6">
+          <Card className="p-6" style={{ backgroundColor: 'rgb(218, 236, 237)' }}>
             <div className="flex items-center gap-3 mb-4">
               <Clock className="w-5 h-5 text-indigo-600" />
               <h3 className="text-lg font-semibold text-slate-800">Horas do Mês</h3>

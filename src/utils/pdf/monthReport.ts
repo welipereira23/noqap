@@ -90,6 +90,8 @@ export function generateMonthReport(
   doc.setTextColor(0, 0, 0); // reset para preto
 
   // Turnos Registrados
+  let y = horasY + 40; // Inicializa y aqui para estar disponível em todo o escopo
+
   if (shifts.length > 0) {
     const turnosY = horasY + 40;
 
@@ -109,7 +111,7 @@ export function generateMonthReport(
     doc.text('Duração', 150, turnosY + 16);
 
     // Linhas da tabela
-    let y = turnosY + 20;
+    y = turnosY + 20;
     shifts.forEach((shift, index) => {
       if (y > 270) {
         doc.addPage();
@@ -147,25 +149,30 @@ export function generateMonthReport(
 
   // Dias Não Contábeis
   if (nonAccountingDays.length > 0) {
-    doc.addPage();
+    let diasNaoContabeisY = shifts.length > 0 ? y + 20 : y;
+
+    if (diasNaoContabeisY > 240) { // Se não houver espaço suficiente na página atual
+      doc.addPage();
+      diasNaoContabeisY = 20;
+    }
 
     // Cabeçalho da seção
     doc.setFillColor(243, 244, 246); // gray-100
-    doc.rect(15, 20, 180, 8, 'F');
+    doc.rect(15, diasNaoContabeisY, 180, 8, 'F');
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('Dias Não Contábeis', 15, 26);
+    doc.text('Dias Não Contábeis', 15, diasNaoContabeisY + 6);
 
     // Cabeçalho da tabela
     doc.setFillColor(249, 250, 251); // gray-50
-    doc.rect(15, 30, 180, 8, 'F');
+    doc.rect(15, diasNaoContabeisY + 10, 180, 8, 'F');
     doc.setFontSize(11);
-    doc.text('Data', 20, 36);
-    doc.text('Tipo', 70, 36);
-    doc.text('Motivo', 120, 36);
+    doc.text('Data', 20, diasNaoContabeisY + 16);
+    doc.text('Tipo', 70, diasNaoContabeisY + 16);
+    doc.text('Motivo', 120, diasNaoContabeisY + 16);
 
     // Linhas da tabela
-    let y = 40;
+    y = diasNaoContabeisY + 20;
     nonAccountingDays.forEach((day, index) => {
       if (y > 270) {
         doc.addPage();

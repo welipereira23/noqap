@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Clock, Trash2, Edit } from 'lucide-react';
+import { Clock, Trash2 } from 'lucide-react';
 import { Card } from '../ui/card';
 import { ConfirmationDialog } from '../ui/confirmation-dialog';
 import { useData } from '../../hooks/useData';
@@ -95,9 +95,6 @@ export function ShiftList({ monthStart }: ShiftListProps) {
                       )}
                     </div>
                     <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button className="p-1 text-slate-400 hover:text-slate-600 rounded">
-                        <Edit className="w-4 h-4" />
-                      </button>
                       <button
                         onClick={() => handleDelete(shift.id)}
                         className="p-1 text-slate-400 hover:text-rose-600 rounded"
