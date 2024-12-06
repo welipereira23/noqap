@@ -18,7 +18,6 @@ export function RegisterPage() {
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
     const confirmPassword = formData.get('confirmPassword') as string;
-    const name = formData.get('name') as string;
 
     if (password !== confirmPassword) {
       setError('As senhas não coincidem');
@@ -27,7 +26,7 @@ export function RegisterPage() {
     }
 
     try {
-      await signUp(email, password, name);
+      await signUp(email, password);
       toast.success('Conta criada com sucesso!', {
         description: 'Verifique seu email para confirmar sua conta.',
       });
@@ -56,21 +55,6 @@ export function RegisterPage() {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           <form className="space-y-6" onSubmit={handleSubmit}>
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                Nome
-              </label>
-              <div className="mt-1">
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  required
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                />
-              </div>
-            </div>
-
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email

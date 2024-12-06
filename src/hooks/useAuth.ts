@@ -39,35 +39,27 @@ export function useAuth() {
     }
   };
 
-  const signUp = async (email: string, password: string, name: string) => {
+  const signUp = async (email: string, password: string) => {
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: { name },
-        },
       });
 
       if (error) throw error;
 
       if (data.user) {
-        // Criar registro do usuário na tabela users
-        const { error: userError } = await supabase
+        await supabase
           .from('users')
           .insert([
             {
               id: data.user.id,
               email: data.user.email,
-              name,
             },
           ]);
-
-        if (userError) throw userError;
-
-        // Não fazer login automático, esperar confirmação do email
-        navigate('/login');
       }
+
+      return data;
     } catch (error) {
       errorLogger.logError(error as Error, 'Auth:signUp');
       throw error;

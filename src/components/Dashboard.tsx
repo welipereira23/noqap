@@ -31,18 +31,6 @@ export function Dashboard() {
   return (
     <div className="min-h-screen bg-slate-50 p-4">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-3">
-            <Menu className="w-6 h-6 text-slate-800" />
-            <h1 className="text-2xl font-bold text-slate-800">NoQap</h1>
-          </div>
-          <div className="flex items-center gap-2 bg-slate-100 rounded-full px-4 py-2">
-            <PieChart className="w-5 h-5 text-slate-600" />
-            <span className="font-medium text-slate-600">Análise</span>
-          </div>
-        </div>
-
         {/* Avisos de Assinatura */}
         {isTrialExpired && (
           <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-6 rounded-r-lg">
