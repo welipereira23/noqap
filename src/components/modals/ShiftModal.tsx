@@ -2,9 +2,7 @@ import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { Clock } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
-import { useStore } from '../../store/useStore';
 import { useData } from '../../hooks/useData';
-import { generateId } from '../../utils/generateId';
 import { calculateDuration } from '../../utils/time/duration';
 import { formatHoursDuration } from '../../utils/dateUtils';
 
@@ -26,8 +24,7 @@ export function ShiftModal({ isOpen, onClose, editingShift, defaultDate = new Da
   console.log('Editing Shift:', editingShift);
   console.log('Modal Classes:', "w-[95vw] sm:w-[425px] p-0 overflow-hidden");
 
-  const { addShift: addShiftMutation } = useData();
-  const updateShift = useStore((state) => state.updateShift);
+  const { addShift } = useData();
   const [duration, setDuration] = useState<number | null>(null);
   const [nightHours, setNightHours] = useState<number>(0);
   const [nightBonus, setNightBonus] = useState<string>('');
@@ -63,12 +60,7 @@ export function ShiftModal({ isOpen, onClose, editingShift, defaultDate = new Da
       description: description || undefined
     };
 
-    if (editingShift) {
-      updateShift(editingShift.id, shiftData);
-    } else {
-      addShiftMutation(shiftData);
-    }
-
+    addShift(shiftData);
     onClose();
   };
 
@@ -147,13 +139,15 @@ export function ShiftModal({ isOpen, onClose, editingShift, defaultDate = new Da
                   <span className="font-semibold">{formatHoursDuration(duration)}</span>
                 </div>
                 {nightHours > 0 && (
-                  <div className="mt-2 ml-6">
-                    <p className="text-xs text-slate-600">
-                      Inclui {nightHours}h noturnas (23h às 5h)
-                    </p>
-                    <p className="text-xs text-slate-600">
-                      Adicional noturno: {nightBonus}
-                    </p>
+                  <div className="mt-2 text-sm text-slate-500">
+                    <div className="flex items-center gap-2">
+                      <span>Horas noturnas:</span>
+                      <span className="font-medium text-indigo-600">{nightHours}h</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span>Adicional noturno:</span>
+                      <span className="font-medium text-indigo-600">{nightBonus}</span>
+                    </div>
                   </div>
                 )}
               </div>
@@ -162,11 +156,11 @@ export function ShiftModal({ isOpen, onClose, editingShift, defaultDate = new Da
             <div>
               <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
                 <Clock className="w-4 h-4 text-indigo-600" />
-                Descrição
+                Descrição (opcional)
               </label>
               <textarea
                 name="description"
-                rows={3}
+                rows={2}
                 defaultValue={editingShift?.description}
                 className="w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 placeholder="Descreva as atividades realizadas..."
@@ -174,21 +168,13 @@ export function ShiftModal({ isOpen, onClose, editingShift, defaultDate = new Da
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors"
-            >
-              {editingShift ? 'Salvar' : 'Registrar'}
-            </button>
-          </div>
+          <button
+            type="submit"
+            className="w-full flex justify-center items-center gap-2 py-2 px-4 bg-indigo-600 text-white rounded-md font-medium hover:bg-indigo-700 transition-colors"
+          >
+            <Clock className="w-4 h-4" />
+            {editingShift ? 'Atualizar' : 'Registrar'}
+          </button>
         </form>
       </DialogContent>
     </Dialog>
