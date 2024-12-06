@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { Calendar, FileText, ChevronDown } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
 import { useData } from '../../hooks/useData';
 import { NonAccountingDayType } from '../../types';
+import { toast } from 'sonner';
 
 interface NonAccountingDayModalProps {
   isOpen: boolean;
@@ -37,30 +38,62 @@ export function NonAccountingDayModal({
   const { addNonAccountingDay } = useData();
   const [selectedType, setSelectedType] = useState<NonAccountingDayType>(editingDay?.type || dayTypes[0]);
 
-  console.log('=== NonAccountingDayModal Debug ===');
-  console.log('Is Open:', isOpen);
-  console.log('Editing Day:', editingDay);
-  console.log('Selected Type:', selectedType);
-  console.log('Modal Classes:', "w-[90vw] sm:w-[500px] p-0 overflow-hidden");
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    
-    const startDate = new Date(formData.get('startDate') as string);
-    const endDate = new Date(formData.get('endDate') as string);
-    const type = formData.get('type') as NonAccountingDayType;
-    const reason = formData.get('reason') as string;
 
-    const dayData = {
-      startDate,
-      endDate,
-      type,
-      reason: reason || undefined
-    };
+    try {
+      const formData = new FormData(e.currentTarget);
+      const startDateStr = formData.get('startDate') as string;
+      const endDateStr = formData.get('endDate') as string;
+      const reason = formData.get('reason') as string;
 
-    addNonAccountingDay(dayData);
-    onClose();
+      if (!startDateStr || !endDateStr) {
+        toast.error('Por favor, selecione as datas');
+        return;
+      }
+
+      try {
+        // [DEBUG] Log dos dados do formulário
+        console.log('[NonAccountingDayModal] Dados do formulário:', {
+          startDateStr,
+          endDateStr,
+          type: selectedType,
+          reason
+        });
+
+        // Criar datas sem manipulação de timezone
+        const startDate = new Date(`${startDateStr}T12:00:00`);
+        const endDate = new Date(`${endDateStr}T12:00:00`);
+
+        // Validar datas
+        if (startDate > endDate) {
+          toast.error('A data inicial não pode ser posterior à data final');
+          return;
+        }
+
+        // Enviar dados
+        const data = {
+          startDate,
+          endDate,
+          type: selectedType,
+          reason: reason || undefined
+        };
+
+        // [DEBUG] Log final dos dados antes de enviar
+        console.log('[NonAccountingDayModal] Enviando dados:', data);
+
+        await addNonAccountingDay(data);
+        
+        // Fechar modal e mostrar mensagem de sucesso
+        onClose();
+        toast.success('Dia não contábil registrado com sucesso!');
+      } catch (error: any) {
+        console.error('[NonAccountingDayModal] Erro ao registrar dia não contábil:', error);
+        toast.error(error.message || 'Erro ao registrar dia não contábil');
+      }
+    } catch (error) {
+      console.error('[NonAccountingDayModal] Erro ao processar formulário:', error);
+    }
   };
 
   const defaultStartDateStr = editingDay 
@@ -92,6 +125,9 @@ export function NonAccountingDayModal({
                 </svg>
               </button>
             </div>
+            <DialogDescription className="text-white/80 text-sm">
+              Registre um período não contábil como férias, licença ou outros.
+            </DialogDescription>
           </DialogHeader>
         </div>
 

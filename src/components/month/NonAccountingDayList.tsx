@@ -20,10 +20,18 @@ export function NonAccountingDayList({ monthStart }: NonAccountingDayListProps) 
 
   // Filtra e ordena os dias não contábeis do mês
   const monthNonAccountingDays = nonAccountingDays
-    .filter(day => 
-      isWithinInterval(day.date, { start, end })
-    )
+    .filter(day => {
+      console.log('[NonAccountingDayList] Verificando dia:', {
+        date: day.date,
+        start,
+        end,
+        isWithin: isWithinInterval(day.date, { start, end })
+      });
+      return isWithinInterval(day.date, { start, end });
+    })
     .sort((a, b) => b.date.getTime() - a.date.getTime());
+
+  console.log('[NonAccountingDayList] Dias filtrados:', monthNonAccountingDays);
 
   const handleDelete = (id: string) => {
     setDeleteDayId(id);

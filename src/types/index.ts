@@ -20,10 +20,18 @@ export type NonAccountingDayType =
   | 'Núpcias'
   | 'Outros';
 
+export type NonAccountingDayDBType =
+  | 'FERIAS'
+  | 'LICENCA_MEDICA'
+  | 'LICENCA_MATERNIDADE'
+  | 'LICENCA_PATERNIDADE'
+  | 'LUTO'
+  | 'NUPCIAL'
+  | 'OUTROS';
+
 export type NonAccountingDay = {
   id: string;
-  startDate: Date;
-  endDate: Date;
+  date: Date;
   type: NonAccountingDayType;
   reason?: string;
   userId: string;

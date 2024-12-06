@@ -154,6 +154,30 @@ export async function createNonAccountingDay(userId: string, day: {
   return data;
 }
 
+export async function addNonAccountingDay(data: {
+  start_date: string;
+  end_date: string;
+  type: string;
+  reason?: string;
+  user_id: string;
+}) {
+  console.log('API: Adicionando dia não contábil:', data);
+  
+  const { data: insertedData, error } = await supabase
+    .from('non_accounting_days')
+    .insert(data)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('API: Erro ao inserir dia não contábil:', error);
+    throw error;
+  }
+
+  console.log('API: Dia não contábil inserido com sucesso:', insertedData);
+  return insertedData;
+}
+
 export async function deleteShift(shiftId: string) {
   const { data, error } = await supabase
     .from('shifts')

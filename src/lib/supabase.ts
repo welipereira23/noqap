@@ -5,8 +5,7 @@ export type Tables = {
     Row: {
       id: string
       user_id: string
-      start_date: string
-      end_date: string
+      date: string
       type: string
       reason: string | null
       created_at: string
@@ -14,8 +13,7 @@ export type Tables = {
     Insert: {
       id?: string
       user_id: string
-      start_date: string
-      end_date: string
+      date: string
       type: string
       reason?: string | null
       created_at?: string
@@ -23,8 +21,7 @@ export type Tables = {
     Update: {
       id?: string
       user_id?: string
-      start_date?: string
-      end_date?: string
+      date?: string
       type?: string
       reason?: string | null
       created_at?: string
