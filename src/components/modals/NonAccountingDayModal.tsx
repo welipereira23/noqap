@@ -67,13 +67,24 @@ export function NonAccountingDayModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-[95vw] sm:w-[425px] p-0 overflow-hidden">
-        <div className="bg-gradient-to-br from-amber-500 to-amber-600 p-4 text-white">
+        <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 p-4 text-white">
           <DialogHeader>
-            <div className="flex items-center gap-2">
-              <Calendar className="w-5 h-5" />
-              <DialogTitle className="text-lg font-semibold text-white">
-                {editingDay ? 'Editar Dia Não Contábil' : 'Novo Dia Não Contábil'}
-              </DialogTitle>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-5 h-5" />
+                <DialogTitle className="text-lg font-semibold text-white">
+                  {editingDay ? 'Editar Dia' : 'Novo Dia'}
+                </DialogTitle>
+              </div>
+              <button 
+                onClick={onClose}
+                className="text-white/80 hover:text-white transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
             </div>
           </DialogHeader>
         </div>

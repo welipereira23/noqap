@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Download, Calendar, Clock, Loader2 } from 'lucide-react';
 import { format, isWithinInterval, startOfMonth, endOfMonth } from 'date-fns';
@@ -23,6 +23,20 @@ export function MonthPage() {
   const [isNonAccountingModalOpen, setIsNonAccountingModalOpen] = useState(false);
   const [showRecordOptions, setShowRecordOptions] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowRecordOptions(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const currentDate = new Date(Number(year), Number(month) - 1, 1);
   const stats = calculateMonthlyStats(currentDate, shifts, nonAccountingDays);
@@ -65,13 +79,43 @@ export function MonthPage() {
             </h1>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowRecordOptions(!showRecordOptions)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Novo Registro</span>
-            </button>
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setShowRecordOptions(!showRecordOptions)}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Novo Registro</span>
+              </button>
+              {showRecordOptions && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-50">
+                  <button
+                    onClick={() => {
+                      setIsShiftModalOpen(true);
+                      setShowRecordOptions(false);
+                    }}
+                    className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4" />
+                      <span>Novo Turno</span>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsNonAccountingModalOpen(true);
+                      setShowRecordOptions(false);
+                    }}
+                    className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4" />
+                      <span>Dia Não Contábil</span>
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
             <button 
               onClick={handleExport}
               disabled={isExporting}
