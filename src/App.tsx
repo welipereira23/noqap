@@ -19,11 +19,14 @@ import { queryClient } from './lib/api';
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
-    </QueryClientProvider>
+    <>
+      <Toaster position="top-right" />
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </QueryClientProvider>
+    </>
   );
 }
 
@@ -45,12 +48,6 @@ function AppContent() {
       {user && isInTrial && daysRemaining > 0 && (
         <TrialBanner daysRemaining={daysRemaining} />
       )}
-      <Toaster 
-        position="top-right"
-        expand={false}
-        richColors
-        closeButton
-      />
       <Routes>
         {/* Public Routes */}
         <Route path="/login" element={

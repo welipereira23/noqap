@@ -20,12 +20,14 @@ export type NonAccountingDayType =
   | 'Núpcias'
   | 'Outros';
 
-export interface NonAccountingDay {
+export type NonAccountingDay = {
   id: string;
-  date: Date;
+  startDate: Date;
+  endDate: Date;
   type: NonAccountingDayType;
   reason?: string;
-}
+  userId: string;
+};
 
 export interface Subscription {
   id: string;

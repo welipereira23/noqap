@@ -1,8 +1,7 @@
-import { isWithinInterval } from 'date-fns';
+import { isWithinInterval, eachDayOfInterval, isWeekend } from 'date-fns';
 import { Shift, NonAccountingDay } from '../../types';
-import { calculateShiftDuration } from './shiftDuration';
-import { calculateWorkingDays } from './workingDays';
 import { TIME_CONSTANTS } from './constants';
+import { calculateShiftDuration } from './shiftDuration';
 
 export function calculatePeriodStats(
   shifts: Shift[],
@@ -11,14 +10,44 @@ export function calculatePeriodStats(
   end: Date
 ) {
   // Calcula dias do período
-  const days = calculateWorkingDays(start, end, nonAccountingDays);
+  const allDays = eachDayOfInterval({ start, end });
+  const totalDays = allDays.length;
+  const workingDays = allDays.filter(day => !isWeekend(day)).length;
+  
+  // Dias não contábeis no período
+  const nonAccountingDaysInPeriod = nonAccountingDays.filter(day => {
+    const dayStart = day.startDate;
+    const dayEnd = day.endDate;
+    
+    // Verifica se há sobreposição entre os períodos
+    return (
+      isWithinInterval(dayStart, { start, end }) ||
+      isWithinInterval(dayEnd, { start, end }) ||
+      (dayStart <= start && dayEnd >= end)
+    );
+  });
 
-  // Calcula minutos esperados
-  const expectedMinutes = days.effectiveWorkDays * 
+  // Calcula dias totais não contábeis considerando períodos
+  const nonAccountingDaysCount = nonAccountingDaysInPeriod.reduce((total, day) => {
+    const dayStart = day.startDate > start ? day.startDate : start;
+    const dayEnd = day.endDate < end ? day.endDate : end;
+    
+    // Pega os dias do período
+    const daysInRange = eachDayOfInterval({ start: dayStart, end: dayEnd });
+    
+    // Conta apenas dias úteis
+    return total + daysInRange.filter(d => !isWeekend(d)).length;
+  }, 0);
+
+  // Dias efetivos
+  const effectiveWorkDays = workingDays - nonAccountingDaysCount;
+
+  // Minutos esperados
+  const expectedMinutes = effectiveWorkDays * 
     TIME_CONSTANTS.WORKDAY.HOURS_PER_DAY * 
     TIME_CONSTANTS.WORKDAY.MINUTES_PER_HOUR;
 
-  // Filtra e calcula minutos trabalhados no período
+  // Minutos trabalhados
   const periodShifts = shifts.filter(shift => 
     isWithinInterval(shift.startTime, { start, end })
   );
@@ -28,7 +57,10 @@ export function calculatePeriodStats(
   }, 0);
 
   return {
-    ...days,
+    totalDays,
+    workingDays,
+    nonAccountingDaysCount,
+    effectiveWorkDays,
     expectedMinutes,
     workedMinutes,
     balance: workedMinutes - expectedMinutes

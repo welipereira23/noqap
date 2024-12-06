@@ -2,7 +2,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useStore } from '../store/useStore';
 import { errorLogger } from '../utils/errorLog';
 import * as api from '../lib/api';
-import { Shift, NonAccountingDay } from '../types';
+import { Shift, NonAccountingDay, NonAccountingDayType } from '../types';
+import { supabase } from '../lib/supabase';
+import { toast } from '../utils/toast';
 
 // Função auxiliar para converter datas
 function convertShiftDates(shift: any): Shift {
@@ -52,22 +54,27 @@ export function useData() {
 
   // Non-accounting Days Query
   const { data: nonAccountingDays = [], isLoading: isLoadingDays } = useQuery({
-    queryKey: ['non_accounting_days', user?.id],
+    queryKey: ['non-accounting-days', user?.id],
     queryFn: async () => {
-      if (!user?.id) {
-        console.log('Não há usuário logado para buscar dias não contabilizados');
-        return [];
-      }
-      console.log('Buscando dias não contabilizados para usuário:', user.id);
-      const data = await api.getNonAccountingDays(user.id);
-      console.log('Dias não contabilizados encontrados:', data?.length || 0);
-      return (data || []).map(convertNonAccountingDayDates);
+      if (!user?.id) return [];
+
+      const { data, error } = await supabase
+        .from('non_accounting_days')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      return data.map(day => ({
+        id: day.id,
+        startDate: new Date(day.start_date),
+        endDate: new Date(day.end_date),
+        type: day.type as NonAccountingDayType,
+        reason: day.reason || undefined,
+        userId: day.user_id
+      }));
     },
-    enabled: !!user?.id,
-    staleTime: 0,
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
-    refetchInterval: 30000
+    enabled: !!user?.id
   });
 
   // Add Shift Mutation
@@ -89,22 +96,30 @@ export function useData() {
   });
 
   // Add Non-accounting Day Mutation
-  const addNonAccountingDay = useMutation({
-    mutationFn: async (day: { date: Date; type: string; reason?: string; }) => {
-      if (!user?.id) throw new Error('Usuário não encontrado');
-      console.log('Adicionando dia não contabilizado:', day);
-      const result = await api.createNonAccountingDay(user.id, day);
-      console.log('Dia não contabilizado adicionado:', result);
-      return convertNonAccountingDayDates(result);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['non_accounting_days', user?.id] });
-    },
-    onError: (error) => {
-      console.error('Erro ao adicionar dia não contabilizado:', error);
-      errorLogger.logError(error as Error, 'Data:addNonAccountingDay');
+  const addNonAccountingDay = async (data: Omit<NonAccountingDay, 'id' | 'userId'>) => {
+    try {
+      const { error } = await supabase
+        .from('non_accounting_days')
+        .insert([
+          {
+            start_date: data.startDate,
+            end_date: data.endDate,
+            type: data.type,
+            reason: data.reason,
+            user_id: user?.id
+          }
+        ]);
+
+      if (error) throw error;
+
+      // Revalidar os dados
+      queryClient.invalidateQueries({ queryKey: ['non-accounting-days'] });
+      toast.success('Período registrado com sucesso!');
+    } catch (error) {
+      console.error('Error adding non-accounting day:', error);
+      toast.error('Erro ao registrar período');
     }
-  });
+  };
 
   return {
     shifts,
@@ -116,11 +131,11 @@ export function useData() {
         queryClient.invalidateQueries({ queryKey: ['shifts', user?.id] });
       });
     },
-    addNonAccountingDay: addNonAccountingDay.mutate,
+    addNonAccountingDay,
     deleteNonAccountingDay: (id: string) => {
       console.log('Deletando dia não contabilizado:', id);
       return api.deleteNonAccountingDay(id).then(() => {
-        queryClient.invalidateQueries({ queryKey: ['non_accounting_days', user?.id] });
+        queryClient.invalidateQueries({ queryKey: ['non-accounting_days', user?.id] });
       });
     },
     isLoading: isLoadingShifts || isLoadingDays

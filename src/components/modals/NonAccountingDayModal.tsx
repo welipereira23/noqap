@@ -10,7 +10,8 @@ interface NonAccountingDayModalProps {
   onClose: () => void;
   editingDay?: {
     id: string;
-    date: Date;
+    startDate: Date;
+    endDate: Date;
     type: NonAccountingDayType;
     reason?: string;
   };
@@ -46,12 +47,14 @@ export function NonAccountingDayModal({
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
-    const date = new Date(formData.get('date') as string);
+    const startDate = new Date(formData.get('startDate') as string);
+    const endDate = new Date(formData.get('endDate') as string);
     const type = formData.get('type') as NonAccountingDayType;
     const reason = formData.get('reason') as string;
 
     const dayData = {
-      date,
+      startDate,
+      endDate,
       type,
       reason: reason || undefined
     };
@@ -60,8 +63,11 @@ export function NonAccountingDayModal({
     onClose();
   };
 
-  const defaultDateStr = editingDay 
-    ? format(editingDay.date, 'yyyy-MM-dd')
+  const defaultStartDateStr = editingDay 
+    ? format(editingDay.startDate, 'yyyy-MM-dd')
+    : format(defaultDate, 'yyyy-MM-dd');
+  const defaultEndDateStr = editingDay 
+    ? format(editingDay.endDate, 'yyyy-MM-dd')
     : format(defaultDate, 'yyyy-MM-dd');
 
   return (
@@ -91,18 +97,33 @@ export function NonAccountingDayModal({
 
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           <div className="space-y-4">
-            <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
-                <Calendar className="w-4 h-4 text-amber-500" />
-                Data
-              </label>
-              <input
-                type="date"
-                name="date"
-                required
-                defaultValue={defaultDateStr}
-                className="w-full rounded-md border-slate-200 shadow-sm focus:border-amber-500 focus:ring-amber-500"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+                  <Calendar className="w-4 h-4 text-amber-500" />
+                  Data Início
+                </label>
+                <input
+                  type="date"
+                  name="startDate"
+                  required
+                  defaultValue={defaultStartDateStr}
+                  className="w-full rounded-md border-slate-200 shadow-sm focus:border-amber-500 focus:ring-amber-500"
+                />
+              </div>
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+                  <Calendar className="w-4 h-4 text-amber-500" />
+                  Data Fim
+                </label>
+                <input
+                  type="date"
+                  name="endDate"
+                  required
+                  defaultValue={defaultEndDateStr}
+                  className="w-full rounded-md border-slate-200 shadow-sm focus:border-amber-500 focus:ring-amber-500"
+                />
+              </div>
             </div>
 
             <div>
