@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
-import { Clock } from 'lucide-react';
+import { Clock, Calendar, FileText } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { useData } from '../../hooks/useData';
 import { calculateDuration } from '../../utils/time/duration';
@@ -50,8 +50,9 @@ export function ShiftModal({ isOpen, onClose, editingShift, defaultDate = new Da
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
-    const startTime = new Date(formData.get('startTime') as string);
-    const endTime = new Date(formData.get('endTime') as string);
+    const date = new Date(formData.get('date') as string);
+    const startTime = new Date(`${date.toISOString().split('T')[0]}T${formData.get('startTime') as string}`);
+    const endTime = new Date(`${date.toISOString().split('T')[0]}T${formData.get('endTime') as string}`);
     const description = formData.get('description') as string;
 
     const shiftData = {
@@ -66,15 +67,15 @@ export function ShiftModal({ isOpen, onClose, editingShift, defaultDate = new Da
 
   const defaultDateStr = format(defaultDate, 'yyyy-MM-dd');
   const defaultStartTime = editingShift 
-    ? format(editingShift.startTime, "yyyy-MM-dd'T'HH:mm")
-    : `${defaultDateStr}T09:00`;
+    ? format(editingShift.startTime, "HH:mm")
+    : "09:00";
   const defaultEndTime = editingShift
-    ? format(editingShift.endTime, "yyyy-MM-dd'T'HH:mm")
-    : `${defaultDateStr}T18:00`;
+    ? format(editingShift.endTime, "HH:mm")
+    : "18:00";
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] sm:w-[425px] p-0 overflow-hidden">
+      <DialogContent className="w-[90vw] sm:w-[500px] p-0 overflow-hidden">
         <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 p-4 text-white">
           <DialogHeader>
             <div className="flex items-center justify-between">
@@ -101,72 +102,77 @@ export function ShiftModal({ isOpen, onClose, editingShift, defaultDate = new Da
           <div className="space-y-4">
             <div>
               <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
-                <Clock className="w-4 h-4 text-indigo-600" />
-                Horários
+                <Calendar className="w-4 h-4 text-indigo-600" />
+                Data
               </label>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="startTime" className="block text-xs text-slate-500 mb-1">
-                    Início
-                  </label>
-                  <input
-                    type="datetime-local"
-                    name="startTime"
-                    id="startTime"
-                    required
-                    defaultValue={defaultStartTime}
-                    onChange={(e) => {
-                      const endTime = (document.getElementById('endTime') as HTMLInputElement).value;
-                      calculateShiftStats(e.target.value, endTime);
-                    }}
-                    className="w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="endTime" className="block text-xs text-slate-500 mb-1">
-                    Fim
-                  </label>
-                  <input
-                    type="datetime-local"
-                    name="endTime"
-                    id="endTime"
-                    required
-                    defaultValue={defaultEndTime}
-                    onChange={(e) => {
-                      const startTime = (document.getElementById('startTime') as HTMLInputElement).value;
-                      calculateShiftStats(startTime, e.target.value);
-                    }}
-                    className="w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  />
-                </div>
+              <input
+                type="date"
+                name="date"
+                required
+                defaultValue={format(defaultDate, 'yyyy-MM-dd')}
+                className="w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+                  <Clock className="w-4 h-4 text-indigo-600" />
+                  Hora Início
+                </label>
+                <input
+                  type="time"
+                  name="startTime"
+                  required
+                  defaultValue={defaultStartTime}
+                  onChange={(e) => {
+                    const endTime = (document.getElementById('endTime') as HTMLInputElement).value;
+                    calculateShiftStats(`${defaultDateStr}T${e.target.value}`, `${defaultDateStr}T${endTime}`);
+                  }}
+                  className="w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+                  <Clock className="w-4 h-4 text-indigo-600" />
+                  Hora Fim
+                </label>
+                <input
+                  type="time"
+                  name="endTime"
+                  required
+                  defaultValue={defaultEndTime}
+                  onChange={(e) => {
+                    const startTime = (document.getElementById('startTime') as HTMLInputElement).value;
+                    calculateShiftStats(`${defaultDateStr}T${startTime}`, `${defaultDateStr}T${e.target.value}`);
+                  }}
+                  className="w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                />
               </div>
             </div>
 
             {duration !== null && (
-              <div className="bg-slate-50 rounded-lg p-4">
-                <div className="flex items-center gap-2 text-slate-700">
-                  <Clock className="w-4 h-4 text-indigo-600" />
-                  <span className="text-sm font-medium">Duração base:</span>
-                  <span className="font-semibold">{formatHoursDuration(duration)}</span>
-                </div>
-                {nightHours > 0 && (
-                  <div className="mt-2 text-sm text-slate-500">
-                    <div className="flex items-center gap-2">
-                      <span>Horas noturnas:</span>
-                      <span className="font-medium text-indigo-600">{nightHours}h</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span>Adicional noturno:</span>
-                      <span className="font-medium text-indigo-600">{nightBonus}</span>
-                    </div>
+              <div className="bg-slate-50 rounded-lg p-3">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-xs text-slate-500 block">Duração</span>
+                    <span className="text-sm font-medium text-slate-800">
+                      {formatHoursDuration(duration)}
+                    </span>
                   </div>
-                )}
+                  <div>
+                    <span className="text-xs text-slate-500 block">Noturnas</span>
+                    <span className="text-sm font-medium text-slate-800">
+                      {nightHours}h ({nightBonus})
+                    </span>
+                  </div>
+                </div>
               </div>
             )}
 
             <div>
               <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
-                <Clock className="w-4 h-4 text-indigo-600" />
+                <FileText className="w-4 h-4 text-indigo-600" />
                 Descrição (opcional)
               </label>
               <textarea

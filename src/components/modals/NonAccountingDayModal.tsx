@@ -40,7 +40,7 @@ export function NonAccountingDayModal({
   console.log('Is Open:', isOpen);
   console.log('Editing Day:', editingDay);
   console.log('Selected Type:', selectedType);
-  console.log('Modal Classes:', "w-[95vw] sm:w-[425px] p-0 overflow-hidden");
+  console.log('Modal Classes:', "w-[90vw] sm:w-[500px] p-0 overflow-hidden");
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -66,7 +66,7 @@ export function NonAccountingDayModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] sm:w-[425px] p-0 overflow-hidden">
+      <DialogContent className="w-[90vw] sm:w-[500px] p-0 overflow-hidden">
         <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 p-4 text-white">
           <DialogHeader>
             <div className="flex items-center justify-between">
