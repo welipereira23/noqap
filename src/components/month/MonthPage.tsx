@@ -79,43 +79,6 @@ export function MonthPage() {
             </h1>
           </div>
           <div className="flex items-center gap-2">
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setShowRecordOptions(!showRecordOptions)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Novo Registro</span>
-              </button>
-              {showRecordOptions && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-50">
-                  <button
-                    onClick={() => {
-                      setIsShiftModalOpen(true);
-                      setShowRecordOptions(false);
-                    }}
-                    className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4" />
-                      <span>Novo Turno</span>
-                    </div>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsNonAccountingModalOpen(true);
-                      setShowRecordOptions(false);
-                    }}
-                    className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4" />
-                      <span>Dia Não Contábil</span>
-                    </div>
-                  </button>
-                </div>
-              )}
-            </div>
             <button 
               onClick={handleExport}
               disabled={isExporting}
@@ -128,6 +91,46 @@ export function MonthPage() {
               )}
               <span>Exportar</span>
             </button>
+          </div>
+        </div>
+
+        {/* Floating Action Button */}
+        <div className="fixed bottom-6 right-6">
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setShowRecordOptions(!showRecordOptions)}
+              className="flex items-center justify-center w-14 h-14 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 transition-colors"
+            >
+              <Plus className="w-6 h-6" />
+            </button>
+            {showRecordOptions && (
+              <div className="absolute bottom-16 right-0 w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-1">
+                <button
+                  onClick={() => {
+                    setIsShiftModalOpen(true);
+                    setShowRecordOptions(false);
+                  }}
+                  className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+                >
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    <span>Novo Turno</span>
+                  </div>
+                </button>
+                <button
+                  onClick={() => {
+                    setIsNonAccountingModalOpen(true);
+                    setShowRecordOptions(false);
+                  }}
+                  className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+                >
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4" />
+                    <span>Dia Não Contábil</span>
+                  </div>
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -186,8 +189,8 @@ export function MonthPage() {
 
         {/* Lists */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ShiftList monthStart={currentDate} monthEnd={currentDate} />
-          <NonAccountingDayList monthStart={currentDate} monthEnd={currentDate} />
+          <ShiftList monthStart={startOfMonth(currentDate)} monthEnd={endOfMonth(currentDate)} />
+          <NonAccountingDayList monthStart={startOfMonth(currentDate)} monthEnd={endOfMonth(currentDate)} />
         </div>
 
         {/* Modals */}
