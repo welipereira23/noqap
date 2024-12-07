@@ -40,17 +40,18 @@ function convertNonAccountingDayDates(day: any): NonAccountingDay {
 export function useData() {
   const queryClient = useQueryClient();
   const user = useStore(state => state.user);
+  const currentYear = useStore(state => state.currentDate?.getFullYear());
 
   // Shifts Query
   const { data: shifts = [], isLoading: isLoadingShifts } = useQuery({
-    queryKey: ['shifts', user?.id],
+    queryKey: ['shifts', user?.id, currentYear],
     queryFn: async () => {
       if (!user?.id) {
         console.log('Não há usuário logado para buscar shifts');
         return [];
       }
-      console.log('Buscando shifts para usuário:', user.id);
-      const data = await api.getShifts(user.id);
+      console.log('Buscando shifts para usuário:', user.id, 'ano:', currentYear);
+      const data = await api.getShifts(user.id, currentYear);
       console.log('Shifts encontrados:', data?.length || 0);
       return (data || []).map(convertShiftDates);
     },
@@ -104,7 +105,7 @@ export function useData() {
       return convertShiftDates(result);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['shifts', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['shifts', user?.id, currentYear] });
     },
     onError: (error) => {
       console.error('Erro ao adicionar shift:', error);
@@ -238,7 +239,7 @@ export function useData() {
     deleteShift: (id: string) => {
       console.log('Deletando shift:', id);
       return api.deleteShift(id).then(() => {
-        queryClient.invalidateQueries({ queryKey: ['shifts', user?.id] });
+        queryClient.invalidateQueries({ queryKey: ['shifts', user?.id, currentYear] });
       });
     },
     addNonAccountingDay: addNonAccountingDayMutation.mutate,

@@ -7,7 +7,9 @@ interface Store {
   shifts: Shift[];
   nonAccountingDays: NonAccountingDay[];
   subscription: Subscription | null;
+  currentDate: Date;
   setUser: (user: User | null) => void;
+  setCurrentDate: (date: Date) => void;
   addShift: (shift: Shift) => void;
   updateShift: (id: string, data: Partial<Omit<Shift, 'id'>>) => void;
   removeShift: (id: string) => void;
@@ -24,7 +26,9 @@ export const useStore = create<Store>()(
       shifts: [],
       nonAccountingDays: [],
       subscription: null,
+      currentDate: new Date(),
       setUser: (user) => set({ user }),
+      setCurrentDate: (date) => set({ currentDate: date }),
       addShift: (shift) =>
         set((state) => ({
           shifts: [...state.shifts, shift].sort((a, b) => 
@@ -80,7 +84,8 @@ export const useStore = create<Store>()(
               nonAccountingDays: data.state.nonAccountingDays.map((day: any) => ({
                 ...day,
                 date: new Date(day.date)
-              }))
+              })),
+              currentDate: data.state.currentDate ? new Date(data.state.currentDate) : new Date()
             }
           };
         },
@@ -97,7 +102,8 @@ export const useStore = create<Store>()(
               nonAccountingDays: value.state.nonAccountingDays.map((day: NonAccountingDay) => ({
                 ...day,
                 date: day.date.toISOString()
-              }))
+              })),
+              currentDate: value.state.currentDate.toISOString()
             }
           };
           localStorage.setItem(name, JSON.stringify(data));

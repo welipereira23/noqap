@@ -67,17 +67,7 @@ export function MonthList({ currentDate }: MonthListProps) {
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-1">
-                        <div className={`w-2 h-2 rounded-full ${
-                          stats.minutes.worked === 0 
-                            ? 'bg-slate-200' 
-                            : 'bg-emerald-500'
-                        }`} />
-                        <span className="text-sm font-medium text-slate-600">
-                          {formatHoursDuration(stats.minutes.expected)}
-                        </span>
-                      </div>
+                    <div className="flex items-center">
                       <ChevronRight className="w-5 h-5 text-slate-400" />
                     </div>
                   </div>
