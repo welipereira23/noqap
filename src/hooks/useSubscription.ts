@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useStore } from '../store/useStore';
-import { supabase } from '../lib/api';
+import { supabase } from '../lib/supabase';
 import { errorLogger } from '../utils/errorLog';
 
 export function useSubscription() {

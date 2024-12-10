@@ -1,7 +1,20 @@
 export interface User {
   id: string;
   email: string;
-  name: string;
+  role?: 'admin' | 'user';
+  name?: string;
+}
+
+export interface UserProfile extends User {
+  is_blocked: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface AuthState {
+  user: User | null;
+  isLoading: boolean;
+  error: Error | null;
 }
 
 export interface Shift {

@@ -1,4 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
+import { env } from '../config/env';
+import type { Database } from '../types/supabase';
 
 export type Tables = {
   non_accounting_days: {
@@ -29,11 +31,25 @@ export type Tables = {
   }
 };
 
-if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+if (!env.VITE_SUPABASE_URL || !env.VITE_SUPABASE_ANON_KEY) {
   throw new Error('Missing Supabase credentials');
 }
 
-export const supabase = createClient<Tables>(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
+// Criar uma única instância do cliente Supabase
+export const supabase = createClient<Database>(
+  env.VITE_SUPABASE_URL,
+  env.VITE_SUPABASE_ANON_KEY,
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      storage: localStorage // Forçar o uso do localStorage
+    },
+    global: {
+      headers: {
+        'X-Client-Info': 'bolt'
+      }
+    }
+  }
 );

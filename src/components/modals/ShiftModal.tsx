@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { useData } from '../../hooks/useData';
 import { calculateDuration } from '../../utils/time/duration';
 import { formatHoursDuration } from '../../utils/dateUtils';
+import { toast } from 'sonner';
 
 interface ShiftModalProps {
   isOpen: boolean;
@@ -46,7 +47,7 @@ export function ShiftModal({ isOpen, onClose, editingShift, defaultDate = new Da
     }
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
@@ -55,14 +56,26 @@ export function ShiftModal({ isOpen, onClose, editingShift, defaultDate = new Da
     const endTime = new Date(`${date.toISOString().split('T')[0]}T${formData.get('endTime') as string}`);
     const description = formData.get('description') as string;
 
+    // Validar se a data final é maior que a inicial
+    if (endTime <= startTime) {
+      toast.error('A hora final deve ser maior que a hora inicial');
+      return;
+    }
+
     const shiftData = {
       startTime,
       endTime,
       description: description || undefined
     };
 
-    addShift(shiftData);
-    onClose();
+    try {
+      await addShift(shiftData);
+      toast.success('Turno adicionado com sucesso!');
+      onClose();
+    } catch (error) {
+      console.error('Erro ao adicionar turno:', error);
+      toast.error('Erro ao adicionar turno. Tente novamente.');
+    }
   };
 
   const defaultDateStr = format(defaultDate, 'yyyy-MM-dd');

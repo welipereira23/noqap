@@ -1,16 +1,16 @@
-import { toast as hotToast } from 'sonner';
+import { toast as sonnerToast } from 'sonner';
 
 export const toast = {
   success: (message: string) => {
-    hotToast.success(message);
+    sonnerToast.success(message);
   },
   error: (message: string) => {
-    hotToast.error(message);
+    sonnerToast.error(message);
   },
   info: (message: string) => {
-    hotToast.info(message);
+    sonnerToast.info(message);
   },
   warning: (message: string) => {
-    hotToast.warning(message);
-  }
+    sonnerToast.warning(message);
+  },
 };

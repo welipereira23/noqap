@@ -1,111 +1,180 @@
-import React, { createContext, useContext, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 import { useStore } from '../store/useStore';
-import { supabase } from '../lib/api';
 import { errorLogger } from '../utils/errorLog';
 
-const AuthContext = createContext<{
+interface AuthContextType {
   isLoading: boolean;
-}>({
-  isLoading: true,
-});
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const setUser = useStore((state) => state.setUser);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const user = useStore((state) => state.user);
+  const [isLoading, setIsLoading] = useState(true);
+  const initializationRef = useRef(false);
+  const authCheckInProgressRef = useRef(false);
+
+  const handleBlockedUser = () => {
+    console.log('[Auth] Usuário bloqueado, redirecionando para página de acesso');
+    if (location.pathname !== '/access') {
+      navigate('/access');
+    }
+  };
+
+  const checkBlockStatus = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('is_blocked')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('[Auth] Erro ao verificar status de bloqueio:', error);
+        return false;
+      }
+
+      return data?.is_blocked || false;
+    } catch (error) {
+      console.error('[Auth] Erro ao verificar status:', error);
+      return false;
+    }
+  };
+
+  const processSession = async (session: any) => {
+    try {
+      if (authCheckInProgressRef.current) {
+        console.log('[Auth] Verificação de autenticação já em andamento, pulando...');
+        return;
+      }
+
+      authCheckInProgressRef.current = true;
+      console.log('[Auth] Processando sessão:', session?.user?.email);
+
+      if (!session?.user) {
+        console.log('[Auth] Sem sessão ativa');
+        setUser(null);
+        setIsLoading(false);
+        return;
+      }
+
+      // Buscar dados do usuário
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
+
+      if (userError) {
+        console.error('[Auth] Erro ao buscar dados do usuário:', userError);
+        errorLogger.logError(userError, 'Auth:processSession');
+        setUser(null);
+        return;
+      }
+
+      // Atualizar o estado do usuário
+      const cleanUser = {
+        id: userData.id,
+        email: userData.email,
+        name: userData.name || null,
+        role: userData.role || 'user'
+      };
+
+      console.log('[Auth] Dados do usuário limpos:', cleanUser);
+      setUser(cleanUser);
+
+      // Verificar status de bloqueio e redirecionar se necessário
+      if (userData.is_blocked) {
+        console.log('[Auth] Usuário bloqueado:', userData.email);
+        handleBlockedUser();
+      } else if (location.pathname === '/access') {
+        console.log('[Auth] Usuário desbloqueado, redirecionando para dashboard');
+        navigate('/');
+      }
+
+      console.log('[Auth] Usuário autenticado:', userData.email, 'Role:', userData.role);
+    } catch (error) {
+      console.error('[Auth] Erro ao processar sessão:', error);
+      errorLogger.logError(error as Error, 'Auth:processSession');
+      setUser(null);
+    } finally {
+      authCheckInProgressRef.current = false;
+      setIsLoading(false);
+    }
+  };
+
+  // Monitorar mudanças no status de bloqueio
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel(`public:users:id=eq.${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'users',
+          filter: `id=eq.${user.id}`,
+        },
+        async (payload) => {
+          if (payload.new.is_blocked) {
+            console.log('[Auth] Status de bloqueio alterado para bloqueado');
+            handleBlockedUser();
+          } else if (location.pathname === '/access') {
+            console.log('[Auth] Status de bloqueio alterado para desbloqueado');
+            navigate('/');
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [user?.id, location.pathname]);
+
+  // Verificar status de bloqueio ao recarregar a página
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const verifyBlockStatus = async () => {
+      const isBlocked = await checkBlockStatus(user.id);
+      if (isBlocked && location.pathname !== '/access') {
+        handleBlockedUser();
+      } else if (!isBlocked && location.pathname === '/access') {
+        navigate('/');
+      }
+    };
+
+    verifyBlockStatus();
+  }, [user?.id, location.pathname]);
 
   useEffect(() => {
-    async function initializeAuth() {
-      try {
-        // Verifica sessão atual
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Erro ao buscar sessão:', error);
-          errorLogger.logError(error, 'Auth:getSession');
-          setIsLoading(false);
-          return;
-        }
+    if (initializationRef.current) return;
+    initializationRef.current = true;
 
-        if (session?.user) {
-          console.log('Sessão encontrada, buscando dados do usuário:', session.user.id);
-          
-          // Busca dados completos do usuário
-          const { data: userData, error: userError } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
+    console.log('[Auth] Inicializando autenticação...');
 
-          if (userError) {
-            console.error('Erro ao buscar dados do usuário:', userError);
-            errorLogger.logError(userError, 'Auth:getUser');
-            setIsLoading(false);
-            return;
-          }
+    // Obter sessão inicial
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      processSession(session);
+    });
 
-          if (userData) {
-            console.log('Dados do usuário encontrados:', userData);
-            setUser({
-              id: userData.id,
-              email: userData.email,
-              name: userData.name,
-            });
-          }
-        } else {
-          console.log('Nenhuma sessão encontrada');
-          setUser(null);
-        }
-        
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Erro inesperado na inicialização da autenticação:', error);
-        errorLogger.logError(error as Error, 'Auth:initialization');
-        setIsLoading(false);
-      }
-    }
-
-    initializeAuth();
-
-    // Listener para mudanças na autenticação
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Evento de autenticação:', event);
-        
-        if (event === 'SIGNED_IN' && session?.user) {
-          console.log('Usuário logado, buscando dados:', session.user.id);
-          const { data: userData, error: userError } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-
-          if (userError) {
-            console.error('Erro ao buscar dados do usuário após login:', userError);
-            return;
-          }
-
-          if (userData) {
-            console.log('Dados do usuário atualizados após login:', userData);
-            setUser({
-              id: userData.id,
-              email: userData.email,
-              name: userData.name,
-            });
-          }
-        } else if (event === 'SIGNED_OUT') {
-          console.log('Usuário deslogado');
-          setUser(null);
-          navigate('/login');
-        }
-      }
-    );
+    // Escutar mudanças na autenticação
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      processSession(session);
+    });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate, setUser]);
+  }, []);
 
   return (
     <AuthContext.Provider value={{ isLoading }}>
@@ -114,6 +183,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Exportar o hook como constante para evitar problemas de HMR
-const useAuthContext = () => useContext(AuthContext);
-export { useAuthContext };
+export function useAuthContext() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuthContext must be used within an AuthProvider');
+  }
+  return context;
+}

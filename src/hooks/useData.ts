@@ -2,9 +2,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useStore } from '../store/useStore';
 import { errorLogger } from '../utils/errorLog';
 import * as api from '../lib/api';
-import { Shift, NonAccountingDay, NonAccountingDayType } from '../types';
+import { Shift, NonAccountingDay } from '../types';
 import { supabase } from '../lib/supabase';
 import { toast } from '../utils/toast';
+import { useNavigate } from 'react-router-dom';
 
 // Função auxiliar para converter datas
 function convertShiftDates(shift: any): Shift {
@@ -22,12 +23,6 @@ function convertNonAccountingDayDates(day: any): NonAccountingDay {
   // Ajusta o fuso horário para meia-noite no horário local
   const date = new Date(day.date + 'T12:00:00');
   
-  console.log('[useData] Convertendo data:', {
-    original: day.date,
-    converted: date,
-    iso: date.toISOString()
-  });
-  
   return {
     ...day,
     date,
@@ -37,78 +32,138 @@ function convertNonAccountingDayDates(day: any): NonAccountingDay {
   };
 }
 
+// Função para verificar se o usuário está bloqueado
+const checkBlockStatus = async (user: any) => {
+  if (!user) return;
+
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('is_blocked')
+      .eq('id', user.id)
+      .single();
+
+    if (error) throw error;
+
+    if (data?.is_blocked) {
+      // Se estiver bloqueado, fazer logout
+      await supabase.auth.signOut();
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    console.error('Erro ao verificar status:', error);
+    return false;
+  }
+};
+
 export function useData() {
   const queryClient = useQueryClient();
   const user = useStore(state => state.user);
+  const currentYear = useStore(state => state.currentDate.getFullYear());
+  const setShifts = useStore(state => state.setShifts);
+  const setNonAccountingDays = useStore(state => state.setNonAccountingDays);
+  const navigate = useNavigate();
 
   // Shifts Query
-  const { data: shifts = [], isLoading: isLoadingShifts } = useQuery({
-    queryKey: ['shifts', user?.id],
+  const { data: shifts = [], isLoading: isLoadingShifts, error: shiftsError } = useQuery({
+    queryKey: ['shifts', user?.id, currentYear],
     queryFn: async () => {
       if (!user?.id) {
-        console.log('Não há usuário logado para buscar shifts');
+        console.log('[useData] Não há usuário logado para buscar shifts');
         return [];
       }
-      console.log('Buscando shifts para usuário:', user.id);
-      const data = await api.getShifts(user.id);
-      console.log('Shifts encontrados:', data?.length || 0);
-      return (data || []).map(convertShiftDates);
+      
+      try {
+        console.log('[useData] Buscando shifts para usuário:', user.id, 'ano:', currentYear);
+        const data = await api.getShifts(user.id, currentYear);
+        console.log('[useData] Shifts encontrados:', data?.length || 0);
+        
+        if (!data) {
+          console.warn('[useData] Nenhum dado retornado da API');
+          return [];
+        }
+        
+        const convertedShifts = data.map(convertShiftDates);
+        setShifts(convertedShifts); // Atualiza o store
+        return convertedShifts;
+      } catch (error) {
+        console.error('[useData] Erro ao buscar shifts:', error);
+        errorLogger.logError(error as Error, 'useData:getShifts');
+        return [];
+      }
     },
     enabled: !!user?.id,
-    staleTime: 0,
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    retry: 2,
     refetchOnMount: true,
-    refetchOnWindowFocus: true,
-    refetchInterval: 30000
+    refetchOnWindowFocus: true
   });
 
   // Non-accounting Days Query
-  const { data: nonAccountingDays = [], isLoading: isLoadingDays } = useQuery({
+  const { data: nonAccountingDays = [], isLoading: isLoadingDays, error: daysError } = useQuery({
     queryKey: ['non-accounting-days', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
 
-      console.log('[useData] Buscando dias não contábeis para usuário:', user.id);
+      try {
+        console.log('[useData] Buscando dias não contábeis para usuário:', user.id);
+        const { data, error } = await supabase
+          .from('non_accounting_days')
+          .select('*')
+          .eq('user_id', user.id);
 
-      const { data, error } = await supabase
-        .from('non_accounting_days')
-        .select('*')
-        .eq('user_id', user.id);
+        if (error) throw error;
 
-      if (error) {
+        if (!data) {
+          console.warn('[useData] Nenhum dia não contábil encontrado');
+          return [];
+        }
+
+        const convertedDays = data.map(convertNonAccountingDayDates);
+        setNonAccountingDays(convertedDays); // Atualiza o store
+        return convertedDays;
+      } catch (error) {
         console.error('[useData] Erro ao buscar dias não contábeis:', error);
-        throw error;
-      }
-
-      console.log('[useData] Dias não contábeis encontrados:', data);
-
-      if (!data) {
+        errorLogger.logError(error as Error, 'useData:getNonAccountingDays');
         return [];
       }
-
-      const convertedData = data.map(convertNonAccountingDayDates);
-
-      console.log('[useData] Dados convertidos:', convertedData);
-
-      return convertedData;
     },
-    enabled: !!user?.id
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true
   });
 
   // Add Shift Mutation
-  const addShift = useMutation({
-    mutationFn: async (shift: { startTime: Date; endTime: Date; description?: string; }) => {
+  const addShiftMutation = useMutation({
+    mutationFn: async (data: Omit<Shift, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
       if (!user?.id) throw new Error('Usuário não encontrado');
-      console.log('Adicionando shift:', shift);
-      const result = await api.createShift(user.id, shift);
-      console.log('Shift adicionado:', result);
-      return convertShiftDates(result);
+      
+      try {
+        const result = await api.createShift(user.id, {
+          startTime: data.startTime,
+          endTime: data.endTime,
+          description: data.description
+        });
+        return result;
+      } catch (error) {
+        console.error('Erro ao adicionar shift:', error);
+        throw error;
+      }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['shifts', user?.id] });
+    onSuccess: (_, variables) => {
+      // Invalidar a query para o ano do shift adicionado
+      const shiftYear = variables.startTime.getFullYear();
+      queryClient.invalidateQueries({ queryKey: ['shifts', user?.id, shiftYear] });
+      // Removido o toast.success daqui pois já está no componente
     },
     onError: (error) => {
-      console.error('Erro ao adicionar shift:', error);
+      console.error('[useData] Erro ao adicionar shift:', error);
       errorLogger.logError(error as Error, 'Data:addShift');
+      // Removido o toast.error daqui pois já está no componente
     }
   });
 
@@ -130,8 +185,8 @@ export function useData() {
         });
 
         // Mapear o tipo para o formato do banco
-        const mapType = (type: NonAccountingDayType) => {
-          const typeMap: Record<NonAccountingDayType, string> = {
+        const mapType = (type: NonAccountingDay['type']) => {
+          const typeMap: Record<NonAccountingDay['type'], string> = {
             'Férias': 'FERIAS',
             'Licença Médica': 'LICENCA_MEDICA',
             'Licença Maternidade': 'LICENCA_MATERNIDADE',
@@ -231,23 +286,62 @@ export function useData() {
     }
   });
 
+  // Delete Shift Mutation
+  const deleteShiftMutation = useMutation({
+    mutationFn: async (shiftId: string) => {
+      try {
+        await api.deleteShift(shiftId);
+      } catch (error) {
+        console.error('Erro ao deletar shift:', error);
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['shifts'] });
+      toast.success('Turno removido com sucesso');
+    },
+    onError: (error) => {
+      console.error('[useData] Erro ao deletar shift:', error);
+      errorLogger.logError(error as Error, 'Data:deleteShift');
+      toast.error('Erro ao remover turno');
+    }
+  });
+
+  // Delete Non-Accounting Day Mutation
+  const deleteNonAccountingDayMutation = useMutation({
+    mutationFn: async (dayId: string) => {
+      if (!user?.id) throw new Error('Usuário não encontrado');
+      console.log('[useData] Deletando dia não contábil:', dayId);
+      
+      try {
+        await api.deleteNonAccountingDay(dayId);
+        console.log('[useData] Dia não contábil deletado com sucesso');
+      } catch (error) {
+        console.error('[useData] Erro ao deletar dia não contábil:', error);
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['non-accounting-days', user?.id] });
+      toast.success('Dia não contábil removido com sucesso');
+    },
+    onError: (error) => {
+      console.error('[useData] Erro ao deletar dia não contábil:', error);
+      errorLogger.logError(error as Error, 'Data:deleteNonAccountingDay');
+      toast.error('Erro ao remover dia não contábil');
+    }
+  });
+
   return {
     shifts,
+    isLoadingShifts,
+    shiftsError,
     nonAccountingDays,
-    addShift: addShift.mutate,
-    deleteShift: (id: string) => {
-      console.log('Deletando shift:', id);
-      return api.deleteShift(id).then(() => {
-        queryClient.invalidateQueries({ queryKey: ['shifts', user?.id] });
-      });
-    },
-    addNonAccountingDay: addNonAccountingDayMutation.mutate,
-    deleteNonAccountingDay: (id: string) => {
-      console.log('Deletando dia não contabilizado:', id);
-      return api.deleteNonAccountingDay(id).then(() => {
-        queryClient.invalidateQueries({ queryKey: ['non-accounting-days', user?.id] });
-      });
-    },
-    isLoading: isLoadingShifts || isLoadingDays
+    isLoadingDays,
+    daysError,
+    addShift: addShiftMutation.mutateAsync,
+    deleteShift: deleteShiftMutation.mutateAsync,
+    addNonAccountingDay: addNonAccountingDayMutation.mutateAsync,
+    deleteNonAccountingDay: deleteNonAccountingDayMutation.mutateAsync
   };
 }

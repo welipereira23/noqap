@@ -37,9 +37,13 @@ export function NonAccountingDayModal({
 }: NonAccountingDayModalProps) {
   const { addNonAccountingDay } = useData();
   const [selectedType, setSelectedType] = useState<NonAccountingDayType>(editingDay?.type || dayTypes[0]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
     try {
       const formData = new FormData(e.currentTarget);
@@ -52,47 +56,38 @@ export function NonAccountingDayModal({
         return;
       }
 
-      try {
-        // [DEBUG] Log dos dados do formulário
-        console.log('[NonAccountingDayModal] Dados do formulário:', {
-          startDateStr,
-          endDateStr,
-          type: selectedType,
-          reason
-        });
+      // Criar datas sem manipulação de timezone
+      const startDate = new Date(`${startDateStr}T12:00:00`);
+      const endDate = new Date(`${endDateStr}T12:00:00`);
 
-        // Criar datas sem manipulação de timezone
-        const startDate = new Date(`${startDateStr}T12:00:00`);
-        const endDate = new Date(`${endDateStr}T12:00:00`);
-
-        // Validar datas
-        if (startDate > endDate) {
-          toast.error('A data inicial não pode ser posterior à data final');
-          return;
-        }
-
-        // Enviar dados
-        const data = {
-          startDate,
-          endDate,
-          type: selectedType,
-          reason: reason || undefined
-        };
-
-        // [DEBUG] Log final dos dados antes de enviar
-        console.log('[NonAccountingDayModal] Enviando dados:', data);
-
-        await addNonAccountingDay(data);
-        
-        // Fechar modal e mostrar mensagem de sucesso
-        onClose();
-        toast.success('Dia não contábil registrado com sucesso!');
-      } catch (error: any) {
-        console.error('[NonAccountingDayModal] Erro ao registrar dia não contábil:', error);
-        toast.error(error.message || 'Erro ao registrar dia não contábil');
+      // Validar datas
+      if (startDate > endDate) {
+        toast.error('A data inicial não pode ser posterior à data final');
+        return;
       }
-    } catch (error) {
-      console.error('[NonAccountingDayModal] Erro ao processar formulário:', error);
+
+      // [DEBUG] Log dos dados antes de enviar
+      console.log('[NonAccountingDayModal] Enviando dados:', {
+        startDate,
+        endDate,
+        type: selectedType,
+        reason: reason || undefined
+      });
+
+      await addNonAccountingDay({
+        startDate,
+        endDate,
+        type: selectedType,
+        reason: reason || undefined
+      });
+      
+      toast.success('Dia não contábil registrado com sucesso!');
+      onClose();
+    } catch (error: any) {
+      console.error('[NonAccountingDayModal] Erro ao registrar dia não contábil:', error);
+      toast.error(error.message || 'Erro ao registrar dia não contábil');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -199,6 +194,7 @@ export function NonAccountingDayModal({
 
           <button
             type="submit"
+            disabled={isSubmitting}
             className="w-full flex justify-center items-center gap-2 py-2 px-4 bg-amber-500 text-white rounded-md font-medium hover:bg-amber-600 transition-colors"
           >
             <Calendar className="w-4 h-4" />

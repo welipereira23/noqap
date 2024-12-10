@@ -1,27 +1,23 @@
-import { createClient } from '@supabase/supabase-js';
 import { loadStripe } from '@stripe/stripe-js';
 import { QueryClient } from '@tanstack/react-query';
 import { env } from '../config/env';
-import { Database } from '../types/supabase';
+import { supabase } from './supabase';
 
-// Query Client
+// Query Client com configuração otimizada
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 0, // Always fetch fresh data
+      staleTime: 5 * 60 * 1000, // 5 minutos
       refetchOnMount: true,
       refetchOnWindowFocus: true,
       refetchOnReconnect: true,
-      retry: 1
+      retry: 2,
+      onError: (error) => {
+        console.error('Query error:', error);
+      }
     }
   }
 });
-
-// Supabase Client
-export const supabase = createClient<Database>(
-  env.VITE_SUPABASE_URL,
-  env.VITE_SUPABASE_ANON_KEY
-);
 
 // Stripe Client
 export const stripe = loadStripe(env.VITE_STRIPE_PUBLISHABLE_KEY);
@@ -70,14 +66,23 @@ export async function getSubscription(userId: string) {
   return data;
 }
 
-export async function getShifts(userId: string) {
-  console.log('Buscando shifts para o usuário:', userId);
+export async function getShifts(userId: string, year?: number) {
+  console.log('Buscando shifts para o usuário:', userId, 'ano:', year);
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from('shifts')
       .select('*')
-      .eq('user_id', userId)
-      .order('start_time', { ascending: false });
+      .eq('user_id', userId);
+
+    if (year) {
+      const startDate = `${year}-01-01`;
+      const endDate = `${year}-12-31`;
+      query = query
+        .gte('start_time', startDate)
+        .lte('start_time', endDate);
+    }
+
+    const { data, error } = await query.order('start_time', { ascending: false });
 
     if (error) {
       console.error('Erro ao buscar shifts:', error);
