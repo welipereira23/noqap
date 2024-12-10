@@ -184,54 +184,49 @@ export function MonthPage() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
           {/* Dias no mês */}
-          <div className="bg-white rounded-lg p-4 space-y-4">
-            <h3 className="text-lg font-semibold text-slate-800">Dias no mês</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Card className="bg-slate-50 p-4">
-                <h4 className="text-sm font-medium text-slate-600 mb-2">Total de dias</h4>
+          <Card className="bg-white p-4">
+            <h3 className="text-lg font-semibold text-slate-800 mb-4">Dias no mês</h3>
+            <div className="space-y-4">
+              <div>
+                <h4 className="text-sm font-medium text-slate-600 mb-1">Total de dias</h4>
                 <p className="text-2xl font-semibold text-slate-900">{stats.days.total}</p>
-              </Card>
+              </div>
               
-              <Card className="bg-slate-50 p-4">
-                <h4 className="text-sm font-medium text-slate-600 mb-2">Dias não contábeis</h4>
+              <div>
+                <h4 className="text-sm font-medium text-slate-600 mb-1">Dias não contábeis</h4>
                 <p className="text-2xl font-semibold text-slate-900">{stats.days.nonAccounting}</p>
-              </Card>
+              </div>
               
-              <Card className="bg-slate-50 p-4">
-                <h4 className="text-sm font-medium text-slate-600 mb-2">Dias úteis</h4>
+              <div>
+                <h4 className="text-sm font-medium text-slate-600 mb-1">Dias a trabalhar</h4>
                 <p className="text-2xl font-semibold text-slate-900">{stats.days.effective}</p>
-              </Card>
-              
-              <Card className="bg-slate-50 p-4">
-                <h4 className="text-sm font-medium text-slate-600 mb-2">Dias trabalhados</h4>
-                <p className="text-2xl font-semibold text-slate-900">{stats.days.worked}</p>
-              </Card>
+              </div>
             </div>
-          </div>
+          </Card>
 
           {/* Horas no mês */}
-          <div className="bg-white rounded-lg p-4 space-y-4">
-            <h3 className="text-lg font-semibold text-slate-800">Horas no mês</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Card className="bg-slate-50 p-4">
-                <h4 className="text-sm font-medium text-slate-600 mb-2">Horas previstas</h4>
+          <Card className="bg-white p-4">
+            <h3 className="text-lg font-semibold text-slate-800 mb-4">Horas no mês</h3>
+            <div className="space-y-4">
+              <div>
+                <h4 className="text-sm font-medium text-slate-600 mb-1">Horas previstas</h4>
                 <p className="text-2xl font-semibold text-slate-900">{formatHoursDuration(stats.minutes.expected)}</p>
-              </Card>
+              </div>
               
-              <Card className="bg-slate-50 p-4">
-                <h4 className="text-sm font-medium text-slate-600 mb-2">Horas trabalhadas</h4>
+              <div>
+                <h4 className="text-sm font-medium text-slate-600 mb-1">Horas trabalhadas</h4>
                 <p className="text-2xl font-semibold text-slate-900">{formatHoursDuration(stats.minutes.worked)}</p>
-              </Card>
+              </div>
               
-              <Card className="bg-slate-50 p-4 sm:col-span-2">
-                <h4 className="text-sm font-medium text-slate-600 mb-2">Saldo</h4>
+              <div>
+                <h4 className="text-sm font-medium text-slate-600 mb-1">Saldo</h4>
                 <p className={`text-2xl font-semibold ${stats.minutes.balance >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                   {formatHoursDuration(Math.abs(stats.minutes.balance))}
                   {stats.minutes.balance >= 0 ? ' positivo' : ' negativo'}
                 </p>
-              </Card>
+              </div>
             </div>
-          </div>
+          </Card>
         </div>
 
         {/* Lists */}
