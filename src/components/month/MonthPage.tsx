@@ -182,47 +182,56 @@ export function MonthPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
-          <Card className="bg-white p-3 sm:p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" />
-              <h3 className="text-sm sm:text-base font-medium text-slate-800">Horas Previstas</h3>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+          {/* Dias no mês */}
+          <div className="bg-white rounded-lg p-4 space-y-4">
+            <h3 className="text-lg font-semibold text-slate-800">Dias no mês</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Card className="bg-slate-50 p-4">
+                <h4 className="text-sm font-medium text-slate-600 mb-2">Total de dias</h4>
+                <p className="text-2xl font-semibold text-slate-900">{stats.days.total}</p>
+              </Card>
+              
+              <Card className="bg-slate-50 p-4">
+                <h4 className="text-sm font-medium text-slate-600 mb-2">Dias não contábeis</h4>
+                <p className="text-2xl font-semibold text-slate-900">{stats.days.nonAccounting}</p>
+              </Card>
+              
+              <Card className="bg-slate-50 p-4">
+                <h4 className="text-sm font-medium text-slate-600 mb-2">Dias úteis</h4>
+                <p className="text-2xl font-semibold text-slate-900">{stats.days.effective}</p>
+              </Card>
+              
+              <Card className="bg-slate-50 p-4">
+                <h4 className="text-sm font-medium text-slate-600 mb-2">Dias trabalhados</h4>
+                <p className="text-2xl font-semibold text-slate-900">{stats.days.worked}</p>
+              </Card>
             </div>
-            <p className="text-lg sm:text-xl font-semibold text-slate-900">
-              {formatHoursDuration(stats.minutes.expected)}
-            </p>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              {stats.days.effective} dias úteis
-            </p>
-          </Card>
+          </div>
 
-          <Card className="bg-white p-3 sm:p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
-              <h3 className="text-sm sm:text-base font-medium text-slate-800">Horas Trabalhadas</h3>
+          {/* Horas no mês */}
+          <div className="bg-white rounded-lg p-4 space-y-4">
+            <h3 className="text-lg font-semibold text-slate-800">Horas no mês</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Card className="bg-slate-50 p-4">
+                <h4 className="text-sm font-medium text-slate-600 mb-2">Horas previstas</h4>
+                <p className="text-2xl font-semibold text-slate-900">{formatHoursDuration(stats.minutes.expected)}</p>
+              </Card>
+              
+              <Card className="bg-slate-50 p-4">
+                <h4 className="text-sm font-medium text-slate-600 mb-2">Horas trabalhadas</h4>
+                <p className="text-2xl font-semibold text-slate-900">{formatHoursDuration(stats.minutes.worked)}</p>
+              </Card>
+              
+              <Card className="bg-slate-50 p-4 sm:col-span-2">
+                <h4 className="text-sm font-medium text-slate-600 mb-2">Saldo</h4>
+                <p className={`text-2xl font-semibold ${stats.minutes.balance >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                  {formatHoursDuration(Math.abs(stats.minutes.balance))}
+                  {stats.minutes.balance >= 0 ? ' positivo' : ' negativo'}
+                </p>
+              </Card>
             </div>
-            <p className="text-lg sm:text-xl font-semibold text-emerald-600">
-              {formatHoursDuration(stats.minutes.worked)}
-            </p>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              {stats.days.worked} dias trabalhados
-            </p>
-          </Card>
-
-          <Card className="bg-white p-3 sm:p-4 sm:col-span-2 lg:col-span-1">
-            <div className="flex items-center gap-2 mb-2">
-              <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-rose-600" />
-              <h3 className="text-sm sm:text-base font-medium text-slate-800">Saldo</h3>
-            </div>
-            <p className={`text-lg sm:text-xl font-semibold ${
-              stats.minutes.balance >= 0 ? 'text-emerald-600' : 'text-rose-600'
-            }`}>
-              {formatHoursDuration(stats.minutes.balance)}
-            </p>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              {stats.days.nonAccounting} dias não contábeis
-            </p>
-          </Card>
+          </div>
         </div>
 
         {/* Lists */}
