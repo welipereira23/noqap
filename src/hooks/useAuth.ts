@@ -176,7 +176,7 @@ export function useAuth() {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'https://noqap.com/auth/callback'
+          redirectTo: 'https://noqap.com/auth/callback'.trim()
         }
       });
 
