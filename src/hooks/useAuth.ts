@@ -10,39 +10,11 @@ export function useAuth() {
   const setUser = useStore((state) => state.setUser);
   const user = useStore((state) => state.user);
 
-  // Monitora mudanças no status de bloqueio do usuário
-  useEffect(() => {
-    if (!user?.id) return;
-
-    const channel = supabase
-      .channel(`public:users:id=eq.${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'users',
-          filter: `id=eq.${user.id}`,
-        },
-        async (payload) => {
-          if (payload.new.is_blocked) {
-            console.log('[useAuth] Usuário foi bloqueado:', user.email);
-            toast.error('Seu acesso foi bloqueado pelo administrador.');
-            await signOut();
-            navigate('/access');
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      channel.unsubscribe();
-    };
-  }, [user?.id]);
-
   const signIn = async (email: string, password: string) => {
     try {
       console.log('[useAuth] Tentando fazer login com email:', email);
+      
+      // Primeiro faz login no Supabase
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -59,8 +31,8 @@ export function useAuth() {
         throw new Error('Login failed: No user data');
       }
 
-      console.log('[useAuth] Login bem sucedido:', data.user);
-      
+      console.log('[useAuth] Login Supabase bem sucedido, buscando dados do usuário');
+
       // Buscar dados adicionais do usuário
       const { data: userData, error: userError } = await supabase
         .from('users')
@@ -73,22 +45,34 @@ export function useAuth() {
         throw userError;
       }
 
+      console.log('[useAuth] Dados do usuário recuperados, verificando bloqueio');
+
       // Verificar se o usuário está bloqueado
       if (userData.is_blocked) {
-        console.log('[useAuth] Usuário bloqueado:', userData.email);
-        setUser(null);
+        console.log('[useAuth] Usuário bloqueado, redirecionando para /access');
+        setUser({
+          id: userData.id,
+          email: userData.email,
+          name: userData.name,
+          role: userData.role || 'user',
+          is_blocked: true
+        });
         navigate('/access');
         return;
       }
 
-      // Atualizar o estado do usuário
+      console.log('[useAuth] Usuário não bloqueado, atualizando estado');
+
+      // Atualizar o estado do usuário apenas se não estiver bloqueado
       setUser({
         id: userData.id,
         email: userData.email,
         name: userData.name,
-        role: userData.role || 'user'
+        role: userData.role || 'user',
+        is_blocked: false
       });
 
+      console.log('[useAuth] Estado atualizado, redirecionando para /');
       navigate('/');
       return data;
     } catch (error) {
@@ -131,7 +115,7 @@ export function useAuth() {
     }
   };
 
-  const signOut = async () => {
+  const signOut = async (redirectTo: string = '/login') => {
     try {
       console.log('[useAuth] Iniciando logout');
       const { error } = await supabase.auth.signOut();
@@ -144,7 +128,7 @@ export function useAuth() {
 
       console.log('[useAuth] Logout bem sucedido');
       setUser(null);
-      navigate('/login');
+      navigate(redirectTo, { replace: true });
     } catch (error) {
       console.error('[useAuth] Erro inesperado no logout:', error);
       errorLogger.logError(error as Error, 'Auth:signOut');

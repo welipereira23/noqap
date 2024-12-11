@@ -20,38 +20,32 @@ function App() {
       <Toaster position="top-right" />
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <AppContent />
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+
+            {/* Protected Routes */}
+            <Route element={<PrivateRoute />}>
+              <Route path="/access" element={<AccessPage />} />
+              <Route element={<Layout />}>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/month/:year/:month" element={<MonthPage />} />
+                
+                {/* Admin Routes */}
+                <Route element={<AdminRoute />}>
+                  <Route path="/admin" element={<UserList />} />
+                </Route>
+              </Route>
+            </Route>
+
+            {/* Catch all route */}
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
         </AuthProvider>
       </QueryClientProvider>
     </>
-  );
-}
-
-function AppContent() {
-  return (
-    <Routes>
-      {/* Public Routes */}
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-
-      {/* Protected Routes */}
-      <Route element={<PrivateRoute />}>
-        <Route path="/access" element={<AccessPage />} />
-        <Route element={<Layout />}>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/month/:year/:month" element={<MonthPage />} />
-          
-          {/* Admin Routes */}
-          <Route element={<AdminRoute />}>
-            <Route path="/admin" element={<UserList />} />
-          </Route>
-        </Route>
-      </Route>
-
-      {/* Catch all route */}
-      <Route path="*" element={<Navigate to="/" />} />
-    </Routes>
   );
 }
 

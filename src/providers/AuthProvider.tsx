@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useStore } from '../store/useStore';
 import { errorLogger } from '../utils/errorLog';
+import { toast } from '../utils/toast';
 
 interface AuthContextType {
   isLoading: boolean;
@@ -18,13 +19,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const initializationRef = useRef(false);
   const authCheckInProgressRef = useRef(false);
-
-  const handleBlockedUser = () => {
-    console.log('[Auth] Usuário bloqueado, redirecionando para página de acesso');
-    if (location.pathname !== '/access') {
-      navigate('/access');
-    }
-  };
 
   const checkBlockStatus = async (userId: string) => {
     try {
@@ -82,19 +76,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         id: userData.id,
         email: userData.email,
         name: userData.name || null,
-        role: userData.role || 'user'
+        role: userData.role || 'user',
+        is_blocked: userData.is_blocked || false
       };
 
       console.log('[Auth] Dados do usuário limpos:', cleanUser);
-      setUser(cleanUser);
 
       // Verificar status de bloqueio e redirecionar se necessário
       if (userData.is_blocked) {
         console.log('[Auth] Usuário bloqueado:', userData.email);
-        handleBlockedUser();
+        setUser({
+          id: userData.id,
+          email: userData.email,
+          name: userData.name || null,
+          role: userData.role || 'user',
+          is_blocked: true
+        });
+        navigate('/access', { replace: true });
       } else if (location.pathname === '/access') {
         console.log('[Auth] Usuário desbloqueado, redirecionando para dashboard');
         navigate('/');
+      } else {
+        setUser(cleanUser);
       }
 
       console.log('[Auth] Usuário autenticado:', userData.email, 'Role:', userData.role);
@@ -123,11 +126,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           filter: `id=eq.${user.id}`,
         },
         async (payload) => {
+          console.log('[Auth] Mudança detectada no usuário:', payload.new);
+          
+          // Se o usuário foi bloqueado
           if (payload.new.is_blocked) {
-            console.log('[Auth] Status de bloqueio alterado para bloqueado');
-            handleBlockedUser();
-          } else if (location.pathname === '/access') {
-            console.log('[Auth] Status de bloqueio alterado para desbloqueado');
+            console.log('[Auth] Usuário foi bloqueado');
+            setUser({
+              ...user,
+              is_blocked: true
+            });
+            navigate('/access');
+          } 
+          // Se o usuário foi desbloqueado
+          else if (!payload.new.is_blocked && location.pathname === '/access') {
+            console.log('[Auth] Usuário foi desbloqueado');
+            setUser({
+              ...user,
+              is_blocked: false
+            });
             navigate('/');
           }
         }
@@ -137,23 +153,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       channel.unsubscribe();
     };
-  }, [user?.id, location.pathname]);
+  }, [user?.id]);
 
-  // Verificar status de bloqueio ao recarregar a página
+  // Verificar status de bloqueio ao carregar a página
   useEffect(() => {
     if (!user?.id) return;
 
     const verifyBlockStatus = async () => {
-      const isBlocked = await checkBlockStatus(user.id);
-      if (isBlocked && location.pathname !== '/access') {
-        handleBlockedUser();
-      } else if (!isBlocked && location.pathname === '/access') {
+      const { data, error } = await supabase
+        .from('users')
+        .select('is_blocked')
+        .eq('id', user.id)
+        .single();
+
+      if (error) {
+        console.error('[Auth] Erro ao verificar status de bloqueio:', error);
+        return;
+      }
+
+      if (data.is_blocked && location.pathname !== '/access') {
+        console.log('[Auth] Usuário está bloqueado, redirecionando para /access');
+        setUser({
+          ...user,
+          is_blocked: true
+        });
+        navigate('/access');
+      } else if (!data.is_blocked && location.pathname === '/access') {
+        console.log('[Auth] Usuário não está bloqueado, redirecionando para /');
+        setUser({
+          ...user,
+          is_blocked: false
+        });
         navigate('/');
       }
     };
 
     verifyBlockStatus();
-  }, [user?.id, location.pathname]);
+  }, [user?.id]);
 
   useEffect(() => {
     if (initializationRef.current) return;

@@ -62,27 +62,27 @@ export function ShiftList({ monthStart }: ShiftListProps) {
               >
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
-                    <p className="text-sm font-medium text-slate-800">
+                    <p className="text-base font-medium text-slate-800">
                       {format(shift.startTime, "dd 'de' MMMM", { locale: ptBR })}
                     </p>
                     <div className="space-y-0.5">
-                      <p className="text-sm text-indigo-600">
+                      <p className="text-base text-indigo-600">
                         {format(shift.startTime, 'HH:mm')} - {format(shift.endTime, 'HH:mm')}
                       </p>
-                      <p className="text-sm text-indigo-600">
+                      <p className="text-base text-indigo-600">
                         Minutos Noturnos = {calculateDuration({
                           start: shift.startTime,
                           end: shift.endTime
                         }).nightBonus}min
                       </p>
-                      <p className="text-sm text-emerald-600">
+                      <p className="text-base text-emerald-600">
                         Total = {formatHoursDuration(calculateDuration({
                           start: shift.startTime,
                           end: shift.endTime
                         }).totalMinutes)}
                       </p>
                       {shift.description && (
-                        <p className="text-sm text-slate-500">
+                        <p className="text-base text-slate-500">
                           {shift.description}
                         </p>
                       )}
