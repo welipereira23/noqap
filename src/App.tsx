@@ -6,6 +6,7 @@ import { LoginPage } from './components/auth/LoginPage';
 import { RegisterPage } from './components/auth/RegisterPage';
 import { ForgotPasswordPage } from './components/auth/ForgotPasswordPage';
 import { AccessPage } from './components/auth/AccessPage';
+import { AuthCallback } from './components/auth/AuthCallback';
 import { PrivateRoute } from './components/auth/PrivateRoute';
 import { AdminRoute } from './components/auth/AdminRoute';
 import { Layout } from './components/Layout';
@@ -25,6 +26,7 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
 
             {/* Protected Routes */}
             <Route element={<PrivateRoute />}>

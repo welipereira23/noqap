@@ -94,7 +94,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
         navigate('/access', { replace: true });
       } else if (location.pathname === '/access') {
-        console.log('[Auth] Usuário desbloqueado, redirecionando para dashboard');
+        console.log('[Auth] Usuário desbloqueado, redirecionando para página inicial');
         navigate('/');
       } else {
         setUser(cleanUser);

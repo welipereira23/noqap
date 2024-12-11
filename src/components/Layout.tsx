@@ -34,7 +34,7 @@ export function Layout() {
   const tabs = [
     {
       id: 'dashboard',
-      label: 'Dashboard',
+      label: 'Início',
       path: '/',
     }
   ];

@@ -31,9 +31,9 @@ export function SuccessPage() {
           description: 'Bem-vindo ao NoQap! Você agora tem acesso a todos os recursos.',
         });
 
-        // Redirecionar para o dashboard após 3 segundos
+        // Redirecionar para o início após 3 segundos
         setTimeout(() => {
-          navigate('/dashboard');
+          navigate('/');
         }, 3000);
       } catch (error) {
         console.error('Error fetching subscription:', error);
@@ -58,7 +58,7 @@ export function SuccessPage() {
           Pagamento Aprovado!
         </h1>
         <p className="text-gray-600 mb-6">
-          Sua assinatura foi confirmada com sucesso. Você será redirecionado para o dashboard em instantes.
+          Sua assinatura foi confirmada com sucesso. Você será redirecionado para a página inicial em instantes.
         </p>
         <div className="animate-pulse text-sm text-gray-500">
           Redirecionando...

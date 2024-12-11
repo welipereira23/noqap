@@ -170,11 +170,36 @@ export function useAuth() {
     }
   };
 
+  const signInWithGoogle = async () => {
+    try {
+      console.log('[useAuth] Iniciando login com Google');
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+
+      if (error) {
+        console.error('[useAuth] Erro no login com Google:', error);
+        errorLogger.logError(error, 'Auth:signInWithGoogle');
+        throw error;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('[useAuth] Erro inesperado no login com Google:', error);
+      errorLogger.logError(error as Error, 'Auth:signInWithGoogle');
+      throw error;
+    }
+  };
+
   return {
     user,
     session: user ? { user } : null,
     signIn,
     signUp,
+    signInWithGoogle,
     signOut,
     resetPassword,
     updatePassword,
