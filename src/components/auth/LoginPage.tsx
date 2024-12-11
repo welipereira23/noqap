@@ -55,12 +55,12 @@ export function LoginPage() {
             <Clock className="h-8 w-8 text-white" />
           </div>
           <h2 className="text-3xl font-bold tracking-tight text-white mb-2">
-            Entrar no NoQap
+            Faça login no NoQap
           </h2>
           <p className="text-indigo-200">
             Não tem uma conta?{' '}
             <Link to="/register" className="font-medium text-white hover:text-indigo-100 transition-colors underline">
-              Crie gratuitamente
+              Cadastre-se gratuitamente
             </Link>
           </p>
         </div>
@@ -83,14 +83,14 @@ export function LoginPage() {
               <div className="w-full border-t border-white/20"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 text-white/80">ou entre com email</span>
+              <span className="px-4 text-white/80">ou faça login com email</span>
             </div>
           </div>
 
           <form className="space-y-5" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-white/90 mb-1.5">
-                Email
+                E-mail
               </label>
               <input
                 id="email"
@@ -112,7 +112,7 @@ export function LoginPage() {
                   to="/forgot-password"
                   className="text-sm font-medium text-indigo-200 hover:text-white transition-colors"
                 >
-                  Esqueceu?
+                  Esqueceu sua senha?
                 </Link>
               </div>
               <input
