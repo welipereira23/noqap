@@ -178,23 +178,81 @@ export function useAuth() {
     }
   };
 
+  // Configuração do cliente Google
+  const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
   const signInWithGoogle = async () => {
     try {
       console.log('[useAuth] Iniciando login com Google');
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: 'https://noqap.com/auth/callback'.trim()
-        }
+      
+      // Carrega a biblioteca do Google
+      await new Promise((resolve) => {
+        const script = document.createElement('script');
+        script.src = 'https://accounts.google.com/gsi/client';
+        script.onload = resolve;
+        document.head.appendChild(script);
       });
 
-      if (error) {
-        console.error('[useAuth] Erro no login com Google:', error);
-        errorLogger.logError(error, 'Auth:signInWithGoogle');
-        throw error;
-      }
+      // Inicializa o cliente Google
+      const client = (window as any).google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: async (response: any) => {
+          if (!response.credential) {
+            throw new Error('Falha na autenticação com Google');
+          }
 
-      return data;
+          // Faz sign-in no Supabase com o ID token do Google
+          const { data, error } = await supabase.auth.signInWithIdToken({
+            provider: 'google',
+            token: response.credential,
+          });
+
+          if (error) {
+            console.error('[useAuth] Erro no login com Google:', error);
+            errorLogger.logError(error, 'Auth:signInWithGoogle');
+            throw error;
+          }
+
+          // Após login bem-sucedido, busca dados do usuário
+          if (data.user) {
+            const { data: userData, error: userError } = await supabase
+              .from('users')
+              .select('*')
+              .eq('id', data.user.id)
+              .single();
+
+            if (userError && userError.code === 'PGRST116') {
+              // Usuário não existe, vamos criar
+              await supabase.from('users').insert([{
+                id: data.user.id,
+                email: data.user.email,
+                name: data.user.user_metadata.full_name,
+                role: 'user',
+                is_blocked: false
+              }]);
+            } else if (userError) {
+              throw userError;
+            }
+
+            // Atualiza o estado do usuário
+            setUser({
+              id: data.user.id,
+              email: data.user.email,
+              name: data.user.user_metadata.full_name,
+              role: 'user',
+              is_blocked: false
+            });
+
+            navigate('/');
+          }
+
+          return data;
+        },
+      });
+
+      // Renderiza o botão do Google (invisível, vamos acionar programaticamente)
+      (window as any).google.accounts.id.prompt();
+
     } catch (error) {
       console.error('[useAuth] Erro inesperado no login com Google:', error);
       errorLogger.logError(error as Error, 'Auth:signInWithGoogle');
