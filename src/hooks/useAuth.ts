@@ -195,28 +195,27 @@ export function useAuth() {
       });
 
       // Inicializa o cliente Google e retorna uma Promise para o ID token
-      const idToken = await new Promise<string>((resolve, reject) => {
-        (window as any).google.accounts.oauth2.initTokenClient({
+      const response = await new Promise<any>((resolve, reject) => {
+        (window as any).google.accounts.id.initialize({
           client_id: GOOGLE_CLIENT_ID,
-          scope: 'email profile',
-          callback: async (tokenResponse: any) => {
-            if (tokenResponse.error) {
-              reject(new Error(tokenResponse.error));
-              return;
-            }
-            resolve(tokenResponse.access_token);
-          },
-        }).requestAccessToken();
+          callback: (response: any) => resolve(response),
+        });
+
+        (window as any).google.accounts.id.prompt((notification: any) => {
+          if (notification.isNotDisplayed()) {
+            reject(new Error('Google Sign In não pôde ser exibido'));
+          }
+        });
       });
 
+      if (!response.credential) {
+        throw new Error('Falha na autenticação com Google');
+      }
+
       // Faz sign-in no Supabase com o ID token do Google
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithIdToken({
         provider: 'google',
-        options: {
-          queryParams: {
-            access_token: idToken
-          }
-        }
+        token: response.credential,
       });
 
       if (error) {
