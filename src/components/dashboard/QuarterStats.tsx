@@ -54,7 +54,7 @@ export function QuarterStats({ currentDate, onDateChange }: QuarterStatsProps) {
         <div className="p-4 border-b border-slate-100">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <div className="flex flex-col items-center sm:items-start">
-              <p className="text-sm text-slate-500">Período atual</p>
+              <p className="text-base text-slate-500">Período atual</p>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => handleYearChange(-1)}
@@ -63,7 +63,7 @@ export function QuarterStats({ currentDate, onDateChange }: QuarterStatsProps) {
                 >
                   <ChevronLeft className="w-5 h-5 text-slate-600" />
                 </button>
-                <span className="text-xl text-slate-800 font-semibold">
+                <span className="text-2xl text-slate-800 font-semibold">
                   {currentDate.getFullYear()}
                 </span>
                 <button
@@ -76,13 +76,13 @@ export function QuarterStats({ currentDate, onDateChange }: QuarterStatsProps) {
               </div>
             </div>
             <div className="flex flex-col items-center sm:items-end gap-2">
-              <p className="text-sm text-slate-500">Trimestres</p>
+              <p className="text-base text-slate-500">Trimestres</p>
               <div className="flex gap-2">
                 {[1, 2, 3, 4].map((quarter) => (
                   <button
                     key={quarter}
                     onClick={() => handleQuarterChange(quarter)}
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                    className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${
                       currentQuarter === quarter
                         ? 'bg-slate-800 text-white font-bold'
                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -93,7 +93,7 @@ export function QuarterStats({ currentDate, onDateChange }: QuarterStatsProps) {
                   </button>
                 ))}
               </div>
-              <p className="text-xs text-slate-500 text-center sm:text-right">
+              <p className="text-sm text-slate-500 text-center sm:text-right">
                 {quarterMonths[currentQuarter as keyof typeof quarterMonths]}
               </p>
             </div>
@@ -103,12 +103,12 @@ export function QuarterStats({ currentDate, onDateChange }: QuarterStatsProps) {
         <CardContent className="p-1 sm:p-2">
           <div className="grid grid-cols-3 gap-1 sm:gap-2">
             {/* Expected Hours */}
-            <div className="bg-indigo-500 rounded-lg p-1.5 sm:p-2 text-white">
+            <div className="bg-indigo-600 rounded-lg p-1.5 sm:p-2 text-white">
               <div className="flex items-center gap-1 mb-0.5">
                 <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="text-[10px] sm:text-xs">Prev</span>
+                <span className="text-sm text-white">Previsto</span>
               </div>
-              <span className="text-sm sm:text-lg font-bold block truncate">
+              <span className="text-base font-bold block truncate">
                 {formatHoursDuration(stats.minutes.expected)}
               </span>
             </div>
@@ -117,9 +117,9 @@ export function QuarterStats({ currentDate, onDateChange }: QuarterStatsProps) {
             <div className="bg-emerald-500 rounded-lg p-1.5 sm:p-2 text-white">
               <div className="flex items-center gap-1 mb-0.5">
                 <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="text-[10px] sm:text-xs">Trab</span>
+                <span className="text-sm text-white">Trabalhado</span>
               </div>
-              <span className="text-sm sm:text-lg font-bold block truncate">
+              <span className="text-base font-bold block truncate">
                 {formatHoursDuration(stats.minutes.worked)}
               </span>
             </div>
@@ -128,9 +128,9 @@ export function QuarterStats({ currentDate, onDateChange }: QuarterStatsProps) {
             <div className="bg-rose-500 rounded-lg p-1.5 sm:p-2 text-white">
               <div className="flex items-center gap-1 mb-0.5">
                 <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="text-[10px] sm:text-xs">Saldo</span>
+                <span className="text-sm text-white">Saldo</span>
               </div>
-              <span className="text-sm sm:text-lg font-bold block truncate">
+              <span className="text-base font-bold block truncate">
                 {formatHoursDuration(stats.minutes.balance)}
               </span>
             </div>

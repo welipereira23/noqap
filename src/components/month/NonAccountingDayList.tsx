@@ -46,17 +46,17 @@ export function NonAccountingDayList({ monthStart }: NonAccountingDayListProps) 
 
   return (
     <>
-      <Card className="p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <Calendar className="w-5 h-5 text-amber-500" />
-          <h3 className="text-lg font-semibold text-slate-800">Dias Não Contábeis</h3>
+      <Card className="p-3">
+        <div className="flex items-center gap-2 mb-3">
+          <Calendar className="w-4 h-4 text-indigo-600" />
+          <h3 className="text-base font-semibold text-slate-800">Dias não contábeis</h3>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-2">
           {monthNonAccountingDays.length === 0 ? (
-            <div className="text-center py-8">
-              <Calendar className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-              <p className="text-slate-500">
+            <div className="text-center py-6">
+              <Calendar className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+              <p className="text-sm text-slate-500">
                 Nenhum dia não contábil registrado neste mês.
               </p>
             </div>
@@ -64,30 +64,30 @@ export function NonAccountingDayList({ monthStart }: NonAccountingDayListProps) 
             monthNonAccountingDays.map(day => (
               <div
                 key={day.id}
-                className="group bg-slate-50 rounded-lg p-4 hover:bg-slate-100 transition-colors"
+                className="group bg-slate-50 rounded-lg p-2.5 hover:bg-slate-100 transition-colors"
               >
                 <div className="flex items-start justify-between">
-                  <div className="space-y-2">
-                    <p className="font-medium text-slate-800">
-                      {format(day.date, "EEEE, dd 'de' MMMM", { locale: ptBR })}
+                  <div className="space-y-1.5">
+                    <p className="text-sm font-medium text-slate-800">
+                      {format(day.date, "dd 'de' MMMM", { locale: ptBR })}
                     </p>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-sm font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-xs text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">
                         {day.type}
                       </span>
                       {day.reason && (
-                        <span className="text-sm text-slate-500 bg-white p-2 rounded">
+                        <span className="text-xs text-slate-500 bg-white px-1.5 py-0.5 rounded">
                           {day.reason}
                         </span>
                       )}
                     </div>
                   </div>
-                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => handleDelete(day.id)}
                       className="p-1 text-slate-400 hover:text-rose-600 rounded"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>

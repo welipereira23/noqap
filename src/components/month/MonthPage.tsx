@@ -151,16 +151,16 @@ export function MonthPage() {
               <Plus className="w-6 h-6" />
             </button>
             {showRecordOptions && (
-              <div className="absolute bottom-16 right-0 w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-1">
+              <div className="absolute bottom-16 right-0 w-56 sm:w-64 bg-white rounded-lg shadow-lg border border-slate-200 py-2">
                 <button
                   onClick={() => {
                     setIsShiftModalOpen(true);
                     setShowRecordOptions(false);
                   }}
-                  className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+                  className="w-full px-4 py-3 text-left text-sm text-slate-700 hover:bg-slate-50 transition-colors"
                 >
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4" />
+                  <div className="flex items-center gap-3">
+                    <Clock className="w-5 h-5 text-indigo-600" />
                     <span>Novo Turno</span>
                   </div>
                 </button>
@@ -169,10 +169,10 @@ export function MonthPage() {
                     setIsNonAccountingModalOpen(true);
                     setShowRecordOptions(false);
                   }}
-                  className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+                  className="w-full px-4 py-3 text-left text-sm text-slate-700 hover:bg-slate-50 transition-colors"
                 >
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
+                  <div className="flex items-center gap-3">
+                    <Calendar className="w-5 h-5 text-indigo-600" />
                     <span>Dia Não Contábil</span>
                   </div>
                 </button>
@@ -184,45 +184,44 @@ export function MonthPage() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
           {/* Dias no mês */}
-          <Card className="bg-white p-4">
-            <h3 className="text-lg font-semibold text-slate-800 mb-4">Dias no mês</h3>
-            <div className="space-y-4">
+          <Card className="bg-[#dff5f4] p-3">
+            <h3 className="text-base font-semibold text-slate-800 mb-3">Dias no mês</h3>
+            <div className="space-y-3">
               <div>
-                <h4 className="text-sm font-medium text-slate-600 mb-1">Total de dias</h4>
-                <p className="text-2xl font-semibold text-slate-900">{stats.days.total}</p>
+                <h4 className="text-sm font-medium text-slate-600 mb-0.5">Total de dias</h4>
+                <p className="text-xl font-semibold text-slate-900">{stats.days.total}</p>
               </div>
               
               <div>
-                <h4 className="text-sm font-medium text-slate-600 mb-1">Dias não contábeis</h4>
-                <p className="text-2xl font-semibold text-slate-900">{stats.days.nonAccounting}</p>
+                <h4 className="text-sm font-medium text-slate-600 mb-0.5">Dias não contábeis</h4>
+                <p className="text-xl font-semibold text-slate-900">{stats.days.nonAccounting}</p>
               </div>
               
               <div>
-                <h4 className="text-sm font-medium text-slate-600 mb-1">Dias a trabalhar</h4>
-                <p className="text-2xl font-semibold text-slate-900">{stats.days.effective}</p>
+                <h4 className="text-sm font-medium text-slate-600 mb-0.5">Dias a trabalhar</h4>
+                <p className="text-xl font-semibold text-slate-900">{stats.days.effective}</p>
               </div>
             </div>
           </Card>
 
           {/* Horas no mês */}
-          <Card className="bg-white p-4">
-            <h3 className="text-lg font-semibold text-slate-800 mb-4">Horas no mês</h3>
-            <div className="space-y-4">
+          <Card className="bg-[#dff5f4] p-3">
+            <h3 className="text-base font-semibold text-slate-800 mb-3">Horas no mês</h3>
+            <div className="space-y-3">
               <div>
-                <h4 className="text-sm font-medium text-slate-600 mb-1">Horas previstas</h4>
-                <p className="text-2xl font-semibold text-slate-900">{formatHoursDuration(stats.minutes.expected)}</p>
+                <h4 className="text-sm font-medium text-slate-600 mb-0.5">Horas previstas</h4>
+                <p className="text-xl font-semibold text-slate-900">{formatHoursDuration(stats.minutes.expected)}</p>
               </div>
               
               <div>
-                <h4 className="text-sm font-medium text-slate-600 mb-1">Horas trabalhadas</h4>
-                <p className="text-2xl font-semibold text-slate-900">{formatHoursDuration(stats.minutes.worked)}</p>
+                <h4 className="text-sm font-medium text-slate-600 mb-0.5">Horas trabalhadas</h4>
+                <p className="text-xl font-semibold text-slate-900">{formatHoursDuration(stats.minutes.worked)}</p>
               </div>
               
               <div>
-                <h4 className="text-sm font-medium text-slate-600 mb-1">Saldo</h4>
-                <p className={`text-2xl font-semibold ${stats.minutes.balance >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                <h4 className="text-sm font-medium text-slate-600 mb-0.5">Saldo</h4>
+                <p className={`text-xl font-semibold ${stats.minutes.balance >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                   {formatHoursDuration(Math.abs(stats.minutes.balance))}
-                  {stats.minutes.balance >= 0 ? ' positivo' : ' negativo'}
                 </p>
               </div>
             </div>

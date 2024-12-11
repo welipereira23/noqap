@@ -100,8 +100,8 @@ export function NonAccountingDayModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[90vw] sm:w-[500px] p-0 overflow-hidden">
-        <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 p-4 text-white">
+      <DialogContent className="w-[95vw] sm:w-[600px] md:w-[700px] p-0 overflow-hidden">
+        <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 p-6 text-white">
           <DialogHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -126,8 +126,8 @@ export function NonAccountingDayModal({
           </DialogHeader>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
-          <div className="space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">

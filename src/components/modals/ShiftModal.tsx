@@ -1,10 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { format } from 'date-fns';
 import { Clock, Calendar, FileText } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { useData } from '../../hooks/useData';
-import { calculateDuration } from '../../utils/time/duration';
-import { formatHoursDuration } from '../../utils/dateUtils';
 import { toast } from 'sonner';
 
 interface ShiftModalProps {
@@ -26,24 +24,23 @@ export function ShiftModal({ isOpen, onClose, editingShift, defaultDate = new Da
   console.log('Modal Classes:', "w-[95vw] sm:w-[425px] p-0 overflow-hidden");
 
   const { addShift } = useData();
-  const [duration, setDuration] = useState<number | null>(null);
-  const [nightHours, setNightHours] = useState<number>(0);
-  const [nightBonus, setNightBonus] = useState<string>('');
 
-  const calculateShiftStats = (start: string, end: string) => {
-    if (start && end) {
-      const startDate = new Date(start);
-      const endDate = new Date(end);
-      
-      const stats = calculateDuration({ start: startDate, end: endDate });
-      
-      setDuration(stats.baseMinutes);
-      setNightHours(stats.nightHours);
-      setNightBonus(formatHoursDuration(stats.nightBonus));
-    } else {
-      setDuration(null);
-      setNightHours(0);
-      setNightBonus('');
+  const predefinedShifts = [
+    { label: '05:30 às 18:00', start: '05:30', end: '18:00' },
+    { label: '17:30 às 06:00', start: '17:30', end: '06:00' },
+    { label: '13:30 às 00:00', start: '13:30', end: '00:00' },
+    { label: '13:30 às 02:00', start: '13:30', end: '02:00' },
+    { label: '08:00 às 12:00', start: '08:00', end: '12:00' },
+    { label: '13:30 às 17:00', start: '13:30', end: '17:00' }
+  ];
+
+  const handlePredefinedShift = (start: string, end: string) => {
+    const startInput = document.querySelector('input[name="startTime"]') as HTMLInputElement;
+    const endInput = document.querySelector('input[name="endTime"]') as HTMLInputElement;
+    
+    if (startInput && endInput) {
+      startInput.value = start;
+      endInput.value = end;
     }
   };
 
@@ -56,10 +53,9 @@ export function ShiftModal({ isOpen, onClose, editingShift, defaultDate = new Da
     const endTime = new Date(`${date.toISOString().split('T')[0]}T${formData.get('endTime') as string}`);
     const description = formData.get('description') as string;
 
-    // Validar se a data final é maior que a inicial
+    // Ajusta a data final se o horário final for menor que o inicial (virada de dia)
     if (endTime <= startTime) {
-      toast.error('A hora final deve ser maior que a hora inicial');
-      return;
+      endTime.setDate(endTime.getDate() + 1);
     }
 
     const shiftData = {
@@ -79,17 +75,13 @@ export function ShiftModal({ isOpen, onClose, editingShift, defaultDate = new Da
   };
 
   const defaultDateStr = format(defaultDate, 'yyyy-MM-dd');
-  const defaultStartTime = editingShift 
-    ? format(editingShift.startTime, "HH:mm")
-    : "09:00";
-  const defaultEndTime = editingShift
-    ? format(editingShift.endTime, "HH:mm")
-    : "18:00";
+  const defaultStartTime = editingShift ? format(editingShift.startTime, "HH:mm") : '05:30';
+  const defaultEndTime = editingShift ? format(editingShift.endTime, "HH:mm") : '18:00';
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[90vw] sm:w-[500px] p-0 overflow-hidden">
-        <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 p-4 text-white">
+      <DialogContent className="w-[95vw] sm:w-[600px] md:w-[700px] p-0 overflow-hidden">
+        <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 p-6 text-white">
           <DialogHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -111,8 +103,8 @@ export function ShiftModal({ isOpen, onClose, editingShift, defaultDate = new Da
           </DialogHeader>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
-          <div className="space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <div className="space-y-6">
             <div>
               <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
                 <Calendar className="w-4 h-4 text-indigo-600" />
@@ -127,6 +119,22 @@ export function ShiftModal({ isOpen, onClose, editingShift, defaultDate = new Da
               />
             </div>
 
+            <div className="bg-slate-50 rounded-lg p-4">
+              <p className="text-sm font-medium text-slate-700 mb-3">Turnos pré-definidos:</p>
+              <div className="grid grid-cols-2 gap-3">
+                {predefinedShifts.map((shift, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => handlePredefinedShift(shift.start, shift.end)}
+                    className="flex items-center justify-center px-3 py-2 text-sm text-indigo-600 bg-white rounded-md border border-slate-200 hover:bg-indigo-50 hover:border-indigo-300 transition-colors"
+                  >
+                    {shift.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
@@ -136,11 +144,12 @@ export function ShiftModal({ isOpen, onClose, editingShift, defaultDate = new Da
                 <input
                   type="time"
                   name="startTime"
+                  id="startTime"
                   required
                   defaultValue={defaultStartTime}
                   onChange={(e) => {
                     const endTime = (document.getElementById('endTime') as HTMLInputElement).value;
-                    calculateShiftStats(`${defaultDateStr}T${e.target.value}`, `${defaultDateStr}T${endTime}`);
+                    // calculateShiftStats(`${defaultDateStr}T${e.target.value}`, `${defaultDateStr}T${endTime}`);
                   }}
                   className="w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 />
@@ -153,35 +162,17 @@ export function ShiftModal({ isOpen, onClose, editingShift, defaultDate = new Da
                 <input
                   type="time"
                   name="endTime"
+                  id="endTime"
                   required
                   defaultValue={defaultEndTime}
                   onChange={(e) => {
                     const startTime = (document.getElementById('startTime') as HTMLInputElement).value;
-                    calculateShiftStats(`${defaultDateStr}T${startTime}`, `${defaultDateStr}T${e.target.value}`);
+                    // calculateShiftStats(`${defaultDateStr}T${startTime}`, `${defaultDateStr}T${e.target.value}`);
                   }}
                   className="w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 />
               </div>
             </div>
-
-            {duration !== null && (
-              <div className="bg-slate-50 rounded-lg p-3">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <span className="text-xs text-slate-500 block">Duração</span>
-                    <span className="text-sm font-medium text-slate-800">
-                      {formatHoursDuration(duration)}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-xs text-slate-500 block">Noturnas</span>
-                    <span className="text-sm font-medium text-slate-800">
-                      {nightHours}h ({nightBonus})
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
 
             <div>
               <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
@@ -196,6 +187,7 @@ export function ShiftModal({ isOpen, onClose, editingShift, defaultDate = new Da
                 placeholder="Descreva as atividades realizadas..."
               />
             </div>
+
           </div>
 
           <button

@@ -25,10 +25,10 @@ export function calculateShiftDuration(startTime: Date, endTime: Date): number {
   // Calcula minutos noturnos
   const nightMinutes = calculateNightMinutes(startTime, endTime);
   
-  return baseMinutes + nightMinutes;
+  return baseMinutes + calculateNightShiftBonus(nightMinutes);
 }
 
-function calculateNightMinutes(startTime: Date, endTime: Date): number {
+export function calculateNightMinutes(startTime: Date, endTime: Date): number {
   let currentTime = new Date(startTime);
   let endTimeAdjusted = new Date(endTime);
   let nightMinutes = 0;
@@ -46,6 +46,12 @@ function calculateNightMinutes(startTime: Date, endTime: Date): number {
     currentTime.setMinutes(currentTime.getMinutes() + 1);
   }
 
+  // Retorna os minutos noturnos reais, sem aplicar o adicional
+  return nightMinutes;
+}
+
+// Nova função para calcular o adicional noturno (usado internamente)
+export function calculateNightShiftBonus(nightMinutes: number): number {
   return Math.floor(nightMinutes * TIME_CONSTANTS.NIGHT_SHIFT.BONUS_PERCENTAGE);
 }
 

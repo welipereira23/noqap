@@ -64,7 +64,7 @@ export function MonthList({ currentDate }: MonthListProps) {
                 <div className="p-2 sm:p-4">
                   <div className="flex justify-between items-center mb-2 sm:mb-4">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-sm sm:text-base text-slate-800">
+                      <span className="font-medium text-base text-slate-800">
                         {formatMonthBR(month)}
                       </span>
                       {isCurrentMonth && (
@@ -81,19 +81,19 @@ export function MonthList({ currentDate }: MonthListProps) {
                   <div className="grid grid-cols-3 gap-2 sm:gap-4 pt-2 border-t border-slate-100">
                     <div>
                       <span className="text-[10px] sm:text-xs text-slate-500 block mb-0.5 sm:mb-1">Previstas</span>
-                      <span className="text-xs sm:text-sm font-medium text-slate-800">
+                      <span className="text-base font-medium text-slate-800">
                         {formatHoursDuration(stats.minutes.expected)}
                       </span>
                     </div>
                     <div>
                       <span className="text-[10px] sm:text-xs text-slate-500 block mb-0.5 sm:mb-1">Trabalhadas</span>
-                      <span className="text-xs sm:text-sm font-medium text-emerald-600">
+                      <span className="text-base font-medium text-emerald-600">
                         {formatHoursDuration(stats.minutes.worked)}
                       </span>
                     </div>
                     <div>
                       <span className="text-[10px] sm:text-xs text-slate-500 block mb-0.5 sm:mb-1">Saldo</span>
-                      <span className={`text-xs sm:text-sm font-medium ${
+                      <span className={`text-base font-medium ${
                         stats.minutes.balance >= 0 ? 'text-emerald-600' : 'text-rose-600'
                       }`}>
                         {formatHoursDuration(stats.minutes.balance)}

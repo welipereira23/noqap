@@ -35,23 +35,23 @@ export function ConfirmationDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] p-0">
-        <div className={`${colors[type].header} p-6 text-white rounded-t-lg`}>
+      <DialogContent className="sm:max-w-[425px] overflow-hidden">
+        <div className={`${colors[type].header} px-6 py-4 text-white`}>
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold text-white">
+            <DialogTitle className="text-lg font-semibold text-white">
               {title}
             </DialogTitle>
           </DialogHeader>
         </div>
 
         <div className="p-6">
-          <p className="text-slate-600">{description}</p>
+          <p className="text-slate-600 text-sm">{description}</p>
 
-          <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
+          <div className="flex justify-end gap-3 mt-6">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+              className="min-w-[100px] px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition-colors"
             >
               {cancelText}
             </button>
@@ -61,7 +61,7 @@ export function ConfirmationDialog({
                 onConfirm();
                 onClose();
               }}
-              className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors ${colors[type].button}`}
+              className={`min-w-[100px] px-4 py-2 text-sm font-medium text-white rounded-md transition-colors ${colors[type].button}`}
             >
               {confirmText}
             </button>

@@ -40,17 +40,17 @@ export function ShiftList({ monthStart }: ShiftListProps) {
 
   return (
     <>
-      <Card className="p-3 sm:p-6">
-        <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
-          <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" />
-          <h3 className="text-base sm:text-lg font-semibold text-slate-800">Turnos</h3>
+      <Card className="p-3">
+        <div className="flex items-center gap-2 mb-3">
+          <Clock className="w-4 h-4 text-indigo-600" />
+          <h3 className="text-base font-semibold text-slate-800">Turnos</h3>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-2">
           {monthShifts.length === 0 ? (
-            <div className="text-center py-8">
-              <Clock className="w-10 h-10 sm:w-12 sm:h-12 text-slate-300 mx-auto mb-3" />
-              <p className="text-sm sm:text-base text-slate-500">
+            <div className="text-center py-6">
+              <Clock className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+              <p className="text-sm text-slate-500">
                 Nenhum turno registrado neste mês.
               </p>
             </div>
@@ -58,36 +58,42 @@ export function ShiftList({ monthStart }: ShiftListProps) {
             monthShifts.map(shift => (
               <div
                 key={shift.id}
-                className="group bg-slate-50 rounded-lg p-2 sm:p-4 hover:bg-slate-100 transition-colors"
+                className="group bg-slate-50 rounded-lg p-2.5 hover:bg-slate-100 transition-colors"
               >
                 <div className="flex items-start justify-between">
-                  <div className="space-y-1 sm:space-y-2">
-                    <p className="text-sm sm:text-base font-medium text-slate-800">
-                      {format(shift.startTime, "EEEE, dd 'de' MMMM", { locale: ptBR })}
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-slate-800">
+                      {format(shift.startTime, "dd 'de' MMMM", { locale: ptBR })}
                     </p>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-xs sm:text-sm text-indigo-600 bg-indigo-50 px-1.5 sm:px-2 py-0.5 rounded">
+                    <div className="space-y-0.5">
+                      <p className="text-sm text-indigo-600">
                         {format(shift.startTime, 'HH:mm')} - {format(shift.endTime, 'HH:mm')}
-                      </span>
-                      <span className="text-xs sm:text-sm text-emerald-600 bg-emerald-50 px-1.5 sm:px-2 py-0.5 rounded">
-                        {formatHoursDuration(calculateDuration({
+                      </p>
+                      <p className="text-sm text-indigo-600">
+                        Minutos Noturnos = {calculateDuration({
+                          start: shift.startTime,
+                          end: shift.endTime
+                        }).nightBonus}min
+                      </p>
+                      <p className="text-sm text-emerald-600">
+                        Total = {formatHoursDuration(calculateDuration({
                           start: shift.startTime,
                           end: shift.endTime
                         }).totalMinutes)}
-                      </span>
+                      </p>
                       {shift.description && (
-                        <span className="text-xs sm:text-sm text-slate-500 bg-white px-1.5 sm:px-2 py-0.5 rounded">
+                        <p className="text-sm text-slate-500">
                           {shift.description}
-                        </span>
+                        </p>
                       )}
                     </div>
                   </div>
-                  <div className="flex gap-1 sm:gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => handleDelete(shift.id)}
                       className="p-1 text-slate-400 hover:text-rose-600 rounded"
                     >
-                      <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
