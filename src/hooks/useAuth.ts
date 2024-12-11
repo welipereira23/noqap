@@ -118,21 +118,29 @@ export function useAuth() {
   const signOut = async (redirectTo: string = '/login') => {
     try {
       console.log('[useAuth] Iniciando logout');
+      
+      // Clear the user state first
+      setUser(null);
+      
+      // Attempt to sign out from Supabase
       const { error } = await supabase.auth.signOut();
       
       if (error) {
         console.error('[useAuth] Erro no logout:', error);
-        errorLogger.logError(error, 'Auth:signOut');
-        throw error;
+        // Don't throw the error if it's just a missing session
+        if (!(error instanceof Error && error.message.includes('Auth session missing'))) {
+          errorLogger.logError(error, 'Auth:signOut');
+          throw error;
+        }
       }
 
       console.log('[useAuth] Logout bem sucedido');
-      setUser(null);
       navigate(redirectTo, { replace: true });
     } catch (error) {
       console.error('[useAuth] Erro inesperado no logout:', error);
       errorLogger.logError(error as Error, 'Auth:signOut');
-      throw error;
+      // Even if there's an error, we still want to redirect
+      navigate(redirectTo, { replace: true });
     }
   };
 

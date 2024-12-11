@@ -55,7 +55,7 @@ export function LoginPage() {
             <Clock className="h-8 w-8 text-white" />
           </div>
           <h2 className="text-3xl font-bold tracking-tight text-white mb-2">
-            Faça login no NoQap
+            NoQap
           </h2>
           <p className="text-indigo-200">
             Não tem uma conta?{' '}
@@ -79,9 +79,6 @@ export function LoginPage() {
           </button>
 
           <div className="relative mb-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/20"></div>
-            </div>
             <div className="relative flex justify-center text-sm">
               <span className="px-4 text-white/80">ou faça login com email</span>
             </div>

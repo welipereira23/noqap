@@ -100,8 +100,8 @@ export function QuarterStats({ currentDate, onDateChange }: QuarterStatsProps) {
           </div>
         </div>
 
-        <CardContent className="p-1 sm:p-2">
-          <div className="grid grid-cols-3 gap-1 sm:gap-2">
+        <CardContent className="p-3 sm:p-4">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
             {/* Expected Hours */}
             <div className="bg-indigo-600 rounded-lg p-1.5 sm:p-2 text-white">
               <div className="flex items-center gap-1 mb-0.5">
