@@ -178,44 +178,15 @@ export function useAuth() {
     }
   };
 
-  // Configuração do cliente Google
-  const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-  console.log('[useAuth] GOOGLE_CLIENT_ID:', GOOGLE_CLIENT_ID);
-
   const signInWithGoogle = async () => {
     try {
       console.log('[useAuth] Iniciando login com Google');
       
-      // Carrega a biblioteca do Google
-      await new Promise<void>((resolve) => {
-        const script = document.createElement('script');
-        script.src = 'https://accounts.google.com/gsi/client';
-        script.onload = () => resolve();
-        document.head.appendChild(script);
-      });
-
-      // Inicializa o cliente Google e retorna uma Promise para o ID token
-      const response = await new Promise<any>((resolve, reject) => {
-        (window as any).google.accounts.id.initialize({
-          client_id: GOOGLE_CLIENT_ID,
-          callback: (response: any) => resolve(response),
-        });
-
-        (window as any).google.accounts.id.prompt((notification: any) => {
-          if (notification.isNotDisplayed()) {
-            reject(new Error('Google Sign In não pôde ser exibido'));
-          }
-        });
-      });
-
-      if (!response.credential) {
-        throw new Error('Falha na autenticação com Google');
-      }
-
-      // Faz sign-in no Supabase com o ID token do Google
-      const { data, error } = await supabase.auth.signInWithIdToken({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        token: response.credential,
+        options: {
+          redirectTo: window.location.origin
+        }
       });
 
       if (error) {
