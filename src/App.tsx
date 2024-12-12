@@ -6,7 +6,6 @@ import { LoginPage } from './components/auth/LoginPage';
 import { RegisterPage } from './components/auth/RegisterPage';
 import { ForgotPasswordPage } from './components/auth/ForgotPasswordPage';
 import { AccessPage } from './components/auth/AccessPage';
-import { AuthCallback } from './components/auth/AuthCallback';
 import { PrivateRoute } from './components/auth/PrivateRoute';
 import { AdminRoute } from './components/auth/AdminRoute';
 import { Layout } from './components/Layout';
@@ -14,6 +13,7 @@ import { Dashboard } from './components/Dashboard';
 import { MonthPage } from './components/month/MonthPage';
 import { UserList } from './components/admin/UserList';
 import { queryClient } from './lib/api';
+import AuthCallback from './components/auth/AuthCallback';
 
 function App() {
   return (

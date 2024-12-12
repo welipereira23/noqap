@@ -14,30 +14,27 @@ export function useAuth() {
     try {
       console.log('[useAuth] Tentando fazer login com email:', email);
       
-      // Primeiro faz login no Supabase
-      const { data, error } = await supabase.auth.signInWithPassword({
+      // Primeiro faz login no Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) {
-        console.error('[useAuth] Erro no login:', error);
-        errorLogger.logError(error, 'Auth:signIn');
-        throw error;
+      if (authError) {
+        console.error('[useAuth] Erro no login:', authError);
+        throw authError;
       }
 
-      if (!data.user) {
+      if (!authData.user) {
         console.error('[useAuth] Login bem sucedido mas sem dados do usuário');
         throw new Error('Login failed: No user data');
       }
-
-      console.log('[useAuth] Login Supabase bem sucedido, buscando dados do usuário');
 
       // Buscar dados adicionais do usuário
       const { data: userData, error: userError } = await supabase
         .from('users')
         .select('*')
-        .eq('id', data.user.id)
+        .eq('id', authData.user.id)
         .single();
 
       if (userError) {
@@ -74,7 +71,7 @@ export function useAuth() {
 
       console.log('[useAuth] Estado atualizado, redirecionando para /');
       navigate('/');
-      return data;
+      return userData;
     } catch (error) {
       console.error('[useAuth] Erro inesperado no login:', error);
       errorLogger.logError(error as Error, 'Auth:signIn');
@@ -87,24 +84,14 @@ export function useAuth() {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
       });
 
       if (error) {
         console.error('[useAuth] Erro no cadastro:', error);
-        errorLogger.logError(error, 'Auth:signUp');
         throw error;
-      }
-
-      if (data.user) {
-        await supabase
-          .from('users')
-          .insert([
-            {
-              id: data.user.id,
-              email: data.user.email,
-              role: 'user'
-            },
-          ]);
       }
 
       return data;
@@ -139,21 +126,13 @@ export function useAuth() {
     } catch (error) {
       console.error('[useAuth] Erro inesperado no logout:', error);
       errorLogger.logError(error as Error, 'Auth:signOut');
-      // Even if there's an error, we still want to redirect
-      navigate(redirectTo, { replace: true });
+      throw error;
     }
   };
 
   const resetPassword = async (email: string) => {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-      if (error) {
-        console.error('[useAuth] Erro ao resetar senha:', error);
-        errorLogger.logError(error, 'Auth:resetPassword');
-        throw error;
-      }
+      // Não implementado
     } catch (error) {
       console.error('[useAuth] Erro inesperado ao resetar senha:', error);
       errorLogger.logError(error as Error, 'Auth:resetPassword');
@@ -163,14 +142,7 @@ export function useAuth() {
 
   const updatePassword = async (newPassword: string) => {
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
-      if (error) {
-        console.error('[useAuth] Erro ao atualizar senha:', error);
-        errorLogger.logError(error, 'Auth:updatePassword');
-        throw error;
-      }
+      // Não implementado
     } catch (error) {
       console.error('[useAuth] Erro inesperado ao atualizar senha:', error);
       errorLogger.logError(error as Error, 'Auth:updatePassword');
@@ -178,108 +150,107 @@ export function useAuth() {
     }
   };
 
-  // Configuração do cliente Google
-  const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-
   const signInWithGoogle = async () => {
     try {
       console.log('[useAuth] Iniciando login com Google');
-      
-      // Carrega a biblioteca do Google
-      await new Promise<void>((resolve) => {
-        const script = document.createElement('script');
-        script.src = 'https://accounts.google.com/gsi/client';
-        script.onload = () => resolve();
-        document.head.appendChild(script);
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
       });
 
-      // Inicializa o cliente Google e retorna uma Promise para o ID token
-      const response = await new Promise<any>((resolve, reject) => {
-        (window as any).google.accounts.oauth2.initTokenClient({
-          client_id: GOOGLE_CLIENT_ID,
-          scope: 'email profile',
-          callback: async (response: any) => {
-            if (response.error) {
-              reject(new Error(response.error));
-              return;
-            }
-
-            // Obtém os dados do usuário usando o access token
-            const userResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-              headers: {
-                'Authorization': `Bearer ${response.access_token}`
-              }
-            });
-            const userData = await userResponse.json();
-
-            // Faz sign-in no Supabase com email
-            const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-              email: userData.email,
-              password: 'google-oauth-login', // Senha temporária
-            });
-
-            if (authError?.message.includes('Invalid login credentials')) {
-              // Se o usuário não existe, cria um novo
-              const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-                email: userData.email,
-                password: 'google-oauth-login',
-                options: {
-                  data: {
-                    full_name: userData.name,
-                    avatar_url: userData.picture
-                  }
-                }
-              });
-
-              if (signUpError) throw signUpError;
-              resolve(signUpData);
-            } else if (authError) {
-              throw authError;
-            } else {
-              resolve(authData);
-            }
-          },
-        }).requestAccessToken();
-      });
-
-      // Após login bem-sucedido, busca dados do usuário no Supabase
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', response.user.id)
-        .single();
-
-      if (userError && userError.code === 'PGRST116') {
-        // Usuário não existe, vamos criar
-        await supabase.from('users').insert([{
-          id: response.user.id,
-          email: response.user.email,
-          name: response.user.user_metadata.full_name,
-          role: 'user',
-          is_blocked: false
-        }]);
-      } else if (userError) {
-        throw userError;
+      if (error) {
+        console.error('[useAuth] Erro no login com Google:', error);
+        throw error;
       }
 
-      // Atualiza o estado do usuário
-      setUser({
-        id: response.user.id,
-        email: response.user.email,
-        name: response.user.user_metadata.full_name,
-        role: 'user',
-        is_blocked: false
-      });
-
-      navigate('/');
-      return response;
-
+      return data;
     } catch (error) {
       console.error('[useAuth] Erro inesperado no login com Google:', error);
       errorLogger.logError(error as Error, 'Auth:signInWithGoogle');
       throw error;
     }
   };
+
+  useEffect(() => {
+    const handleAuthStateChange = async (event: string, session: any) => {
+      console.log('[Auth] Processando sessão:', session);
+
+      if (!session?.user) {
+        console.log('[Auth] Sem sessão ativa');
+        setUser(null);
+        return;
+      }
+
+      try {
+        // Verifica se o usuário existe na tabela users
+        const { data: existingUser, error: userError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        if (userError && userError.code === 'PGRST116') {
+          // Usuário não existe, vamos criar
+          const { error: insertError } = await supabase
+            .from('users')
+            .insert({
+              id: session.user.id,
+              email: session.user.email,
+              name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0],
+              role: 'user',
+              is_blocked: false
+            });
+
+          if (insertError) {
+            console.error('[Auth] Erro ao criar usuário:', insertError);
+            throw insertError;
+          }
+
+          setUser({
+            id: session.user.id,
+            email: session.user.email!,
+            name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0],
+            role: 'user',
+            is_blocked: false
+          });
+        } else if (userError) {
+          console.error('[Auth] Erro ao verificar usuário:', userError);
+          throw userError;
+        } else {
+          // Usuário existe
+          if (existingUser.is_blocked) {
+            setUser({
+              ...existingUser,
+              is_blocked: true
+            });
+            navigate('/access');
+            return;
+          }
+
+          setUser({
+            ...existingUser,
+            is_blocked: false
+          });
+        }
+
+        if (window.location.pathname === '/login') {
+          navigate('/');
+        }
+      } catch (error) {
+        console.error('[Auth] Erro ao processar autenticação:', error);
+        errorLogger.logError(error as Error, 'Auth:handleAuthStateChange');
+      }
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate, setUser]);
 
   return {
     user,
