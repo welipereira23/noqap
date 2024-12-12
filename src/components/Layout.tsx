@@ -52,16 +52,17 @@ export function Layout() {
             {user?.email === 'wp22santos@gmail.com' && (
               <button
                 onClick={() => navigate('/admin')}
-                className="p-2 text-gray-500 hover:text-gray-700"
+                className="px-4 py-2 text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
               >
-                Admin
+                Administração
               </button>
             )}
             <button
               onClick={handleLogout}
-              className="p-2 text-gray-500 hover:text-gray-700"
+              className="flex items-center space-x-1 text-gray-500 hover:text-gray-700 transition-colors"
             >
               <LogOut className="h-5 w-5" />
+              <span>Sair</span>
             </button>
           </div>
         </div>

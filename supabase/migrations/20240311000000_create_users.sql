@@ -56,6 +56,12 @@ CREATE POLICY "Enable update for service role" ON public.users
     USING (true)
     WITH CHECK (true);
 
+-- Create indexes
+CREATE INDEX IF NOT EXISTS users_email_idx ON public.users(email);
+CREATE INDEX IF NOT EXISTS users_is_blocked_idx ON public.users(is_blocked);
+CREATE INDEX IF NOT EXISTS users_created_at_idx ON public.users(created_at);
+CREATE INDEX IF NOT EXISTS users_updated_at_idx ON public.users(updated_at);
+
 -- Trigger for updated_at
 DROP TRIGGER IF EXISTS handle_updated_at ON public.users;
 CREATE OR REPLACE FUNCTION public.handle_updated_at()

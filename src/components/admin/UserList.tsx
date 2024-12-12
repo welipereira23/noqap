@@ -9,9 +9,11 @@ import { ptBR } from 'date-fns/locale';
 type User = {
   id: string;
   email: string;
+  name: string;
   is_blocked: boolean;
   created_at: string;
   last_unblocked_at: string | null;
+  updated_at: string;
 };
 
 type ConfirmationDialog = {
@@ -46,10 +48,14 @@ export function UserList() {
       console.log('[UserList] Carregando usuários...');
       const { data, error } = await supabase
         .from('users')
-        .select('id, email, is_blocked, created_at, last_unblocked_at')
+        .select('id, email, name, is_blocked, created_at, last_unblocked_at, updated_at')
         .order('email');
 
-      if (error) throw error;
+      if (error) {
+        console.error('[UserList] Erro ao carregar usuários:', error);
+        toast.error('Erro ao carregar lista de usuários');
+        throw error;
+      }
       
       console.log('[UserList] Usuários carregados:', data);
       setUsers(data || []);
@@ -81,22 +87,22 @@ export function UserList() {
       setUpdating(userId);
       console.log('[UserList] Alterando status do usuário:', userId, 'para:', !currentStatus);
       
-      const updates: any = { 
+      const updates = { 
         is_blocked: !currentStatus,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        ...(currentStatus && { last_unblocked_at: new Date().toISOString() })
       };
-
-      // Se estamos desbloqueando o usuário, atualize last_unblocked_at
-      if (currentStatus) {
-        updates.last_unblocked_at = new Date().toISOString();
-      }
 
       const { error: blockError } = await supabase
         .from('users')
         .update(updates)
         .eq('id', userId);
 
-      if (blockError) throw blockError;
+      if (blockError) {
+        console.error('[UserList] Erro ao atualizar status:', blockError);
+        toast.error('Erro ao atualizar status do usuário');
+        throw blockError;
+      }
 
       setUsers(users.map(user => 
         user.id === userId 
