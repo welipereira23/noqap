@@ -351,6 +351,29 @@ export function useAuth() {
     };
   }, [navigate, setUser]);
 
+  useEffect(() => {
+    // Recuperar usuário do localStorage ao montar o componente
+    const storedUser = localStorage.getItem('bolt-user');
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+      } catch (error) {
+        console.error('[useAuth] Erro ao recuperar usuário do localStorage:', error);
+        localStorage.removeItem('bolt-user');
+      }
+    }
+  }, [setUser]);
+
+  // Atualizar localStorage quando o usuário mudar
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem('bolt-user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('bolt-user');
+    }
+  }, [user]);
+
   return {
     user,
     session: user ? { user } : null,
