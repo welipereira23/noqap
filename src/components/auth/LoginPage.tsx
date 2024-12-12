@@ -1,8 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { toast } from 'sonner';
+
+// Declare o tipo global do Google
+declare global {
+  interface Window {
+    google: {
+      accounts: {
+        oauth2: {
+          initTokenClient(config: {
+            client_id: string;
+            scope: string;
+            callback: (response: { access_token: string }) => void;
+          }): {
+            requestAccessToken(): void;
+          };
+        };
+      };
+    };
+  }
+}
+
+// Carrega o script do Google OAuth
+useEffect(() => {
+  const script = document.createElement('script');
+  script.src = 'https://accounts.google.com/gsi/client';
+  script.async = true;
+  script.defer = true;
+  document.body.appendChild(script);
+
+  return () => {
+    document.body.removeChild(script);
+  };
+}, []);
 
 export function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -31,11 +63,46 @@ export function LoginPage() {
     try {
       setIsLoading(true);
       setError('');
-      await signInWithGoogle();
+
+      // Inicializa o cliente do Google
+      const googleClient = window.google.accounts.oauth2.initTokenClient({
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+        scope: 'email profile',
+        callback: async (response) => {
+          try {
+            // Obtém os dados do usuário do Google
+            const userResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+              headers: {
+                Authorization: `Bearer ${response.access_token}`,
+              },
+            });
+
+            const userData = await userResponse.json();
+            console.log('[LoginPage] Dados do usuário Google:', userData);
+
+            // Chama signInWithGoogle com os dados do usuário
+            await signInWithGoogle({
+              email: userData.email,
+              name: userData.name,
+              sub: userData.sub,
+              picture: userData.picture
+            });
+          } catch (error) {
+            console.error('[LoginPage] Erro ao obter dados do Google:', error);
+            toast.error('Erro ao fazer login com Google');
+            setError('Erro ao fazer login com Google');
+          } finally {
+            setIsLoading(false);
+          }
+        },
+      });
+
+      // Solicita o token
+      googleClient.requestAccessToken();
     } catch (err) {
+      console.error('[LoginPage] Erro no login com Google:', err);
       toast.error('Erro ao fazer login com Google');
       setError('Erro ao fazer login com Google');
-    } finally {
       setIsLoading(false);
     }
   };
