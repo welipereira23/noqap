@@ -1,20 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import errorLogger from '../../lib/errorLogger';
 import { Clock } from 'lucide-react';
 
 declare global {
   interface Window {
-    google?: {
-      accounts: {
-        id: {
-          initialize: (config: any) => void;
-          renderButton: (element: HTMLElement, config: any) => void;
-          prompt: () => void;
-          cancel: () => void;
-        };
-      };
-    };
+    google?: any;
   }
 }
 
@@ -26,75 +17,6 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [googleButtonLoaded, setGoogleButtonLoaded] = useState(false);
-  const googleButtonRef = useRef<HTMLDivElement>(null);
-  const scriptLoadedRef = useRef(false);
-
-  useEffect(() => {
-    // Evita carregar o script múltiplas vezes
-    if (scriptLoadedRef.current) return;
-
-    const initializeGoogleSignIn = () => {
-      if (!window.google) return;
-
-      try {
-        window.google.accounts.id.initialize({
-          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-          callback: handleGoogleLogin,
-          auto_select: false,
-          cancel_on_tap_outside: true,
-        });
-
-        if (googleButtonRef.current) {
-          window.google.accounts.id.renderButton(googleButtonRef.current, {
-            theme: 'outline',
-            size: 'large',
-            width: googleButtonRef.current.offsetWidth,
-            text: 'signin_with',
-          });
-          setGoogleButtonLoaded(true);
-        }
-      } catch (error) {
-        console.error('[LoginPage] Erro ao inicializar Google Sign-In:', error);
-        setError('Erro ao carregar login do Google');
-      }
-    };
-
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    script.id = 'google-signin-script';
-    
-    script.onload = () => {
-      scriptLoadedRef.current = true;
-      initializeGoogleSignIn();
-    };
-    
-    script.onerror = () => {
-      console.error('[LoginPage] Erro ao carregar script do Google');
-      setError('Erro ao carregar login do Google');
-      scriptLoadedRef.current = false;
-    };
-
-    // Remove qualquer script existente antes de adicionar o novo
-    const existingScript = document.getElementById('google-signin-script');
-    if (existingScript) {
-      existingScript.remove();
-    }
-
-    document.body.appendChild(script);
-
-    return () => {
-      if (window.google?.accounts?.id) {
-        try {
-          window.google.accounts.id.cancel();
-        } catch (error) {
-          console.error('[LoginPage] Erro ao cancelar Google Sign-In:', error);
-        }
-      }
-    };
-  }, []);
 
   const handleGoogleLogin = async (response: any) => {
     try {
@@ -181,13 +103,25 @@ export function LoginPage() {
         {/* Card do Formulário */}
         <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 md:p-8 shadow-xl border border-white/20">
           {/* Botão do Google */}
-          <div 
-            ref={googleButtonRef}
-            className="w-full h-10 flex justify-center items-center"
-          >
-            {!googleButtonLoaded && (
-              <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            )}
+          <div>
+            <div 
+              id="g_id_onload"
+              data-client_id={import.meta.env.VITE_GOOGLE_CLIENT_ID}
+              data-context="signin"
+              data-ux_mode="popup"
+              data-callback={handleGoogleLogin}
+              data-auto_prompt="false"
+            />
+            <div 
+              className="g_id_signin"
+              data-type="standard"
+              data-shape="rectangular"
+              data-theme="outline"
+              data-text="signin_with"
+              data-size="large"
+              data-logo_alignment="left"
+              data-width="100%"
+            />
           </div>
 
           <div className="relative my-6">
