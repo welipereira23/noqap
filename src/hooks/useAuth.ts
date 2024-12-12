@@ -154,21 +154,85 @@ export function useAuth() {
     try {
       console.log('[useAuth] Iniciando login com Google');
       
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent'
-          }
-        }
+      const { data: { user: googleUser }, error: authError } = await supabase.auth.signInWithOAuth({
+        provider: 'google'
       });
 
-      if (error) {
-        console.error('[useAuth] Erro na autenticação com Google:', error);
-        throw error;
+      if (authError) {
+        console.error('[useAuth] Erro na autenticação com Google:', authError);
+        throw authError;
       }
+
+      if (!googleUser?.email) {
+        console.error('[useAuth] Email do usuário não disponível');
+        throw new Error('Email do usuário não disponível');
+      }
+
+      // Verifica se o usuário já existe pelo email
+      const { data: existingUser, error: fetchError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', googleUser.email)
+        .single();
+
+      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = not found
+        console.error('[useAuth] Erro ao buscar usuário:', fetchError);
+        throw fetchError;
+      }
+
+      if (!existingUser) {
+        console.log('[useAuth] Criando novo usuário');
+        // Criar novo usuário
+        const { data: newUser, error: createError } = await supabase
+          .from('users')
+          .insert({
+            email: googleUser.email,
+            name: googleUser.user_metadata?.full_name || googleUser.email.split('@')[0],
+            google_id: googleUser.user_metadata?.sub,
+            is_blocked: false,
+            role: 'user'
+          })
+          .select()
+          .single();
+
+        if (createError) {
+          console.error('[useAuth] Erro ao criar usuário:', createError);
+          throw createError;
+        }
+
+        console.log('[useAuth] Novo usuário criado:', newUser);
+        setUser({
+          id: newUser.id,
+          email: newUser.email,
+          name: newUser.name,
+          role: newUser.role,
+          is_blocked: false
+        });
+      } else {
+        console.log('[useAuth] Usuário existente encontrado');
+        
+        if (existingUser.is_blocked) {
+          setUser({
+            id: existingUser.id,
+            email: existingUser.email,
+            name: existingUser.name,
+            role: existingUser.role,
+            is_blocked: true
+          });
+          navigate('/access');
+          return;
+        }
+
+        setUser({
+          id: existingUser.id,
+          email: existingUser.email,
+          name: existingUser.name,
+          role: existingUser.role,
+          is_blocked: false
+        });
+      }
+
+      navigate('/');
     } catch (error) {
       console.error('[useAuth] Erro inesperado no login com Google:', error);
       errorLogger.logError(error as Error, 'Auth:signInWithGoogle');
