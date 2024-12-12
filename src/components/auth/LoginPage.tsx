@@ -3,6 +3,20 @@ import { useAuth } from '../../hooks/useAuth';
 import errorLogger from '../../lib/errorLogger';
 import { Clock } from 'lucide-react';
 
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: any) => void;
+          renderButton: (element: HTMLElement, config: any) => void;
+          prompt: () => void;
+        };
+      };
+    };
+  }
+}
+
 export function LoginPage() {
   const { signInWithGoogle, signIn, signUp } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
@@ -11,14 +25,46 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [googleButtonLoaded, setGoogleButtonLoaded] = useState(false);
 
   useEffect(() => {
-    // Carregar script do Google
+    const initializeGoogleSignIn = () => {
+      if (!window.google) return;
+
+      try {
+        window.google.accounts.id.initialize({
+          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+          callback: handleGoogleLogin,
+          auto_select: false,
+          cancel_on_tap_outside: true,
+        });
+
+        const buttonContainer = document.getElementById('google-signin-button');
+        if (buttonContainer) {
+          window.google.accounts.id.renderButton(buttonContainer, {
+            theme: 'outline',
+            size: 'large',
+            width: buttonContainer.offsetWidth,
+            text: 'signin_with',
+          });
+          setGoogleButtonLoaded(true);
+        }
+      } catch (error) {
+        console.error('[LoginPage] Erro ao inicializar Google Sign-In:', error);
+        setError('Erro ao carregar login do Google');
+      }
+    };
+
+    // Carregar o script do Google
     const script = document.createElement('script');
     script.src = 'https://accounts.google.com/gsi/client';
     script.async = true;
     script.defer = true;
-    script.nonce = 'your-nonce-value'; // Adicione um nonce se necessário
+    script.onload = initializeGoogleSignIn;
+    script.onerror = () => {
+      console.error('[LoginPage] Erro ao carregar script do Google');
+      setError('Erro ao carregar login do Google');
+    };
     document.body.appendChild(script);
 
     return () => {
@@ -30,7 +76,7 @@ export function LoginPage() {
     try {
       setIsLoading(true);
       setError(null);
-      
+
       if (!response?.credential) {
         throw new Error('Credenciais do Google não fornecidas');
       }
@@ -111,21 +157,14 @@ export function LoginPage() {
         {/* Card do Formulário */}
         <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 md:p-8 shadow-xl border border-white/20">
           {/* Botão do Google */}
-          <div
-            id="g_id_onload"
-            data-client_id={import.meta.env.VITE_GOOGLE_CLIENT_ID}
-            data-callback={handleGoogleLogin}
-            data-auto_prompt="false"
-          ></div>
-          <div
-            className="g_id_signin"
-            data-type="standard"
-            data-size="large"
-            data-theme="outline"
-            data-text="sign_in_with"
-            data-shape="rectangular"
-            data-logo_alignment="left"
-          ></div>
+          <div 
+            id="google-signin-button" 
+            className="w-full h-10 flex justify-center items-center"
+          >
+            {!googleButtonLoaded && (
+              <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            )}
+          </div>
 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
