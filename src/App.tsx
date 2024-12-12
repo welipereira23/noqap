@@ -14,10 +14,12 @@ import { MonthPage } from './components/month/MonthPage';
 import { UserList } from './components/admin/UserList';
 import { queryClient } from './lib/api';
 import AuthCallback from './components/auth/AuthCallback';
+import { GoogleScriptLoader } from './components/GoogleScriptLoader';
 
 function App() {
   return (
     <>
+      <GoogleScriptLoader />
       <Toaster position="top-right" />
       <QueryClientProvider client={queryClient}>
         <AuthProvider>

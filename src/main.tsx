@@ -12,9 +12,27 @@ async function initializeApp() {
     console.log('Base URL:', import.meta.env.BASE_URL);
     console.log('API URL:', import.meta.env.VITE_API_URL);
     
+    // Carregar script do Google antecipadamente
+    const loadGoogleScript = new Promise<void>((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      script.onload = () => {
+        console.log('[Google] Script carregado com sucesso');
+        resolve();
+      };
+      document.head.appendChild(script);
+    });
+    
     // Verificar variáveis de ambiente
     await checkEnvVars();
     console.log('Environment variables validated');
+
+    // Carregar script do Google em paralelo com a inicialização do app
+    loadGoogleScript.catch(error => {
+      console.error('[Google] Erro ao carregar script:', error);
+    });
 
     const rootElement = document.getElementById('root');
     
