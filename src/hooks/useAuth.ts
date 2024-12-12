@@ -85,7 +85,7 @@ export function useAuth() {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`
+          emailRedirectTo: REDIRECT_URL
         }
       });
 
@@ -150,6 +150,9 @@ export function useAuth() {
     }
   };
 
+  const SITE_URL = import.meta.env.VITE_SITE_URL || 'https://noqap.com';
+  const REDIRECT_URL = import.meta.env.VITE_REDIRECT_URL || 'https://noqap.com/auth/callback';
+
   const signInWithGoogle = async () => {
     try {
       console.log('[useAuth] Iniciando login com Google');
@@ -157,7 +160,11 @@ export function useAuth() {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`
+          redirectTo: REDIRECT_URL,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent'
+          }
         }
       });
 
