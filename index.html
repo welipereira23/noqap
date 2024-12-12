@@ -10,6 +10,13 @@
     <meta name="description" content="NoQap - Sistema de Controle de Horas" />
     <meta name="theme-color" content="#4F46E5" />
     <title>NoQap - Controle de Horas</title>
+    <script>
+      function handleGoogleLogin(response) {
+        if (window.handleGoogleCallback) {
+          window.handleGoogleCallback(response);
+        }
+      }
+    </script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
   </head>
   <body>

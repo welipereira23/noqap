@@ -6,6 +6,7 @@ import { Clock } from 'lucide-react';
 declare global {
   interface Window {
     google?: any;
+    handleGoogleCallback?: (response: any) => void;
   }
 }
 
@@ -19,68 +20,39 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Remover elementos antigos do Google, se existirem
-    const oldButton = document.querySelector('.g_id_signin');
-    const oldPrompt = document.querySelector('#g_id_onload');
-    if (oldButton) oldButton.remove();
-    if (oldPrompt) oldPrompt.remove();
+    // Registrar o callback para o Google Sign-In
+    window.handleGoogleCallback = async (response) => {
+      try {
+        setIsLoading(true);
+        setError(null);
 
-    // Criar novos elementos
-    const googleSignInWrapper = document.getElementById('google-signin-wrapper');
-    if (!googleSignInWrapper) return;
+        if (!response?.credential) {
+          throw new Error('Credenciais do Google não fornecidas');
+        }
 
-    const googlePrompt = document.createElement('div');
-    googlePrompt.id = 'g_id_onload';
-    googlePrompt.dataset.client_id = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    googlePrompt.dataset.context = 'signin';
-    googlePrompt.dataset.ux_mode = 'popup';
-    googlePrompt.dataset.callback = 'handleGoogleLogin';
-    googlePrompt.dataset.auto_prompt = 'false';
+        // Decodificar o token JWT
+        const base64Url = response.credential.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
 
-    const googleButton = document.createElement('div');
-    googleButton.className = 'g_id_signin';
-    googleButton.dataset.type = 'standard';
-    googleButton.dataset.shape = 'rectangular';
-    googleButton.dataset.theme = 'outline';
-    googleButton.dataset.text = 'signin_with';
-    googleButton.dataset.size = 'large';
-    googleButton.dataset.logo_alignment = 'left';
-    googleButton.dataset.width = '280';
-
-    googleSignInWrapper.appendChild(googlePrompt);
-    googleSignInWrapper.appendChild(googleButton);
-
-    // Adicionar callback ao window
-    window.handleGoogleLogin = handleGoogleLogin;
-  }, []);
-
-  const handleGoogleLogin = async (response: any) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      if (!response?.credential) {
-        throw new Error('Credenciais do Google não fornecidas');
+        const { email, name, sub } = JSON.parse(jsonPayload);
+        
+        await signInWithGoogle({ email, name, sub });
+      } catch (error) {
+        console.error('[LoginPage] Erro no login com Google:', error);
+        setError('Erro ao fazer login com Google. Tente novamente.');
+        errorLogger.logError(error as Error, 'LoginPage:handleGoogleLogin');
+      } finally {
+        setIsLoading(false);
       }
+    };
 
-      // Decodificar o token JWT
-      const base64Url = response.credential.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-      }).join(''));
-
-      const { email, name, sub } = JSON.parse(jsonPayload);
-      
-      await signInWithGoogle({ email, name, sub });
-    } catch (error) {
-      console.error('[LoginPage] Erro no login com Google:', error);
-      setError('Erro ao fazer login com Google. Tente novamente.');
-      errorLogger.logError(error as Error, 'LoginPage:handleGoogleLogin');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    return () => {
+      window.handleGoogleCallback = undefined;
+    };
+  }, [signInWithGoogle]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,7 +111,24 @@ export function LoginPage() {
         {/* Card do Formulário */}
         <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 md:p-8 shadow-xl border border-white/20">
           {/* Botão do Google */}
-          <div id="google-signin-wrapper" className="flex justify-center"></div>
+          <div className="flex justify-center mb-6">
+            <div 
+              id="g_id_onload"
+              data-client_id={import.meta.env.VITE_GOOGLE_CLIENT_ID}
+              data-callback="handleGoogleCallback"
+              data-auto_prompt="false"
+              data-auto_select="false"
+            ></div>
+            <div 
+              className="g_id_signin"
+              data-type="standard"
+              data-size="large"
+              data-theme="outline"
+              data-text="sign_in_with"
+              data-shape="rectangular"
+              data-width="280"
+            ></div>
+          </div>
 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
