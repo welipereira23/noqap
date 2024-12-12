@@ -351,26 +351,26 @@ export function useAuth() {
     };
   }, [navigate, setUser]);
 
+  // Recuperar usuário do localStorage ao iniciar
   useEffect(() => {
-    // Recuperar usuário do localStorage ao montar o componente
     const storedUser = localStorage.getItem('bolt-user');
     if (storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
+        if (parsedUser && parsedUser.id && parsedUser.email) {
+          setUser(parsedUser);
+        }
       } catch (error) {
-        console.error('[useAuth] Erro ao recuperar usuário do localStorage:', error);
+        console.error('[useAuth] Erro ao recuperar usuário:', error);
         localStorage.removeItem('bolt-user');
       }
     }
-  }, [setUser]);
+  }, []); // Executar apenas uma vez ao montar
 
-  // Atualizar localStorage quando o usuário mudar
+  // Salvar usuário no localStorage quando mudar
   useEffect(() => {
     if (user) {
       localStorage.setItem('bolt-user', JSON.stringify(user));
-    } else {
-      localStorage.removeItem('bolt-user');
     }
   }, [user]);
 
