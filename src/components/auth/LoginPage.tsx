@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { errorLogger } from '../../lib/errorLogger';
+import errorLogger from '../../lib/errorLogger';
 import { Clock } from 'lucide-react';
 
 export function LoginPage() {

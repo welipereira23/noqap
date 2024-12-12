@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
-import { errorLogger } from '../utils/errorLog';
+import errorLogger from '../lib/errorLogger';
 import { toast } from 'sonner';
 import { useEffect } from 'react';
 import { supabase } from '../lib/supabase';
