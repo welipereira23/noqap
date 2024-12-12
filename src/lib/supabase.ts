@@ -52,9 +52,7 @@ export const supabase = createClient<Database>(
     },
     global: {
       headers: {
-        'X-Client-Info': 'bolt',
-        'apikey': env.VITE_SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${env.VITE_SUPABASE_ANON_KEY}`
+        'X-Client-Info': 'bolt'
       }
     }
   }
