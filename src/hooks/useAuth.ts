@@ -14,89 +14,125 @@ export function useAuth() {
     try {
       console.log('[useAuth] Tentando fazer login com email:', email);
       
-      // Primeiro faz login no Supabase Auth
-      // const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      //   email,
-      //   password,
-      // });
+      // Buscar usuário pelo email
+      const { data: user, error: fetchError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', email)
+        .single();
 
-      // if (authError) {
-      //   console.error('[useAuth] Erro no login:', authError);
-      //   throw authError;
-      // }
+      if (fetchError) {
+        console.error('[useAuth] Erro ao buscar usuário:', fetchError);
+        throw new Error('Email ou senha inválidos');
+      }
 
-      // if (!authData.user) {
-      //   console.error('[useAuth] Login bem sucedido mas sem dados do usuário');
-      //   throw new Error('Login failed: No user data');
-      // }
+      if (!user) {
+        console.error('[useAuth] Usuário não encontrado');
+        throw new Error('Email ou senha inválidos');
+      }
 
-      // // Buscar dados adicionais do usuário
-      // const { data: userData, error: userError } = await supabase
-      //   .from('users')
-      //   .select('*')
-      //   .eq('id', authData.user.id)
-      //   .single();
+      // Verificar se é um usuário do Google
+      if (user.google_id) {
+        console.error('[useAuth] Usuário registrado com Google');
+        throw new Error('Este email está vinculado ao Google. Por favor, faça login com Google.');
+      }
 
-      // if (userError) {
-      //   console.error('[useAuth] Erro ao buscar dados do usuário:', userError);
-      //   throw userError;
-      // }
+      // Verificar a senha
+      const { data: isValid, error: verifyError } = await supabase
+        .rpc('verify_password', {
+          password,
+          password_hash: user.password_hash
+        });
 
-      console.log('[useAuth] Dados do usuário recuperados, verificando bloqueio');
+      if (verifyError || !isValid) {
+        console.error('[useAuth] Senha inválida');
+        throw new Error('Email ou senha inválidos');
+      }
+
+      console.log('[useAuth] Login bem sucedido');
 
       // Verificar se o usuário está bloqueado
-      // if (userData.is_blocked) {
-      //   console.log('[useAuth] Usuário bloqueado, redirecionando para /access');
-      //   setUser({
-      //     id: userData.id,
-      //     email: userData.email,
-      //     name: userData.name,
-      //     role: userData.role || 'user',
-      //     is_blocked: true
-      //   });
-      //   navigate('/access');
-      //   return;
-      // }
+      if (user.is_blocked) {
+        console.log('[useAuth] Usuário bloqueado');
+        setUser({
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          is_blocked: true
+        });
+        navigate('/access');
+        return;
+      }
 
-      console.log('[useAuth] Usuário não bloqueado, atualizando estado');
+      // Atualizar o estado do usuário
+      setUser({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        is_blocked: false
+      });
 
-      // Atualizar o estado do usuário apenas se não estiver bloqueado
-      // setUser({
-      //   id: userData.id,
-      //   email: userData.email,
-      //   name: userData.name,
-      //   role: userData.role || 'user',
-      //   is_blocked: false
-      // });
-
-      console.log('[useAuth] Estado atualizado, redirecionando para /');
       navigate('/');
-      return;
     } catch (error) {
-      console.error('[useAuth] Erro inesperado no login:', error);
+      console.error('[useAuth] Erro no login:', error);
       errorLogger.logError(error as Error, 'Auth:signIn');
       throw error;
     }
   };
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, name: string) => {
     try {
-      // const { data, error } = await supabase.auth.signUp({
-      //   email,
-      //   password,
-      //   options: {
-      //     emailRedirectTo: REDIRECT_URL
-      //   }
-      // });
+      // Verificar se o email já existe
+      const { data: existingUser, error: fetchError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', email)
+        .single();
 
-      // if (error) {
-      //   console.error('[useAuth] Erro no cadastro:', error);
-      //   throw error;
-      // }
+      if (existingUser) {
+        throw new Error('Este email já está registrado');
+      }
 
-      return;
+      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = not found
+        console.error('[useAuth] Erro ao verificar email:', fetchError);
+        throw fetchError;
+      }
+
+      // Hash da senha
+      const { data: passwordHash, error: hashError } = await supabase
+        .rpc('hash_password', {
+          password
+        });
+
+      if (hashError) {
+        console.error('[useAuth] Erro ao criar hash da senha:', hashError);
+        throw hashError;
+      }
+
+      // Criar usuário
+      const { data: newUser, error: createError } = await supabase
+        .from('users')
+        .insert({
+          email,
+          name,
+          password_hash: passwordHash,
+          role: 'user',
+          is_blocked: false
+        })
+        .select()
+        .single();
+
+      if (createError) {
+        console.error('[useAuth] Erro ao criar usuário:', createError);
+        throw createError;
+      }
+
+      console.log('[useAuth] Usuário criado com sucesso');
+      return newUser;
     } catch (error) {
-      console.error('[useAuth] Erro inesperado no cadastro:', error);
+      console.error('[useAuth] Erro no cadastro:', error);
       errorLogger.logError(error as Error, 'Auth:signUp');
       throw error;
     }
