@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS public.users (
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- Function to hash password
-CREATE OR REPLACE FUNCTION hash_password(password TEXT)
+CREATE OR REPLACE FUNCTION public.hash_password(password TEXT)
 RETURNS TEXT AS $$
 BEGIN
   RETURN crypt(password, gen_salt('bf', 8));
@@ -26,7 +26,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Function to verify password
-CREATE OR REPLACE FUNCTION verify_password(password TEXT, password_hash TEXT)
+CREATE OR REPLACE FUNCTION public.verify_password(password TEXT, password_hash TEXT)
 RETURNS BOOLEAN AS $$
 BEGIN
   RETURN password_hash = crypt(password, password_hash);
@@ -58,7 +58,7 @@ CREATE POLICY "Enable update for service role" ON public.users
 
 -- Trigger for updated_at
 DROP TRIGGER IF EXISTS handle_updated_at ON public.users;
-CREATE OR REPLACE FUNCTION handle_updated_at()
+CREATE OR REPLACE FUNCTION public.handle_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = timezone('utc'::text, now());
@@ -69,4 +69,4 @@ $$ language 'plpgsql';
 CREATE TRIGGER handle_updated_at
     BEFORE UPDATE ON public.users
     FOR EACH ROW
-    EXECUTE PROCEDURE handle_updated_at();
+    EXECUTE PROCEDURE public.handle_updated_at();

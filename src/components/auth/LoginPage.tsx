@@ -18,6 +18,7 @@ export function LoginPage() {
     script.src = 'https://accounts.google.com/gsi/client';
     script.async = true;
     script.defer = true;
+    script.nonce = 'your-nonce-value'; // Adicione um nonce se necessário
     document.body.appendChild(script);
 
     return () => {
@@ -29,7 +30,21 @@ export function LoginPage() {
     try {
       setIsLoading(true);
       setError(null);
-      await signInWithGoogle(response);
+      
+      if (!response?.credential) {
+        throw new Error('Credenciais do Google não fornecidas');
+      }
+
+      // Decodificar o token JWT
+      const base64Url = response.credential.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+
+      const { email, name, sub } = JSON.parse(jsonPayload);
+      
+      await signInWithGoogle({ email, name, sub });
     } catch (error) {
       console.error('[LoginPage] Erro no login com Google:', error);
       setError('Erro ao fazer login com Google. Tente novamente.');
