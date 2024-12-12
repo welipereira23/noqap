@@ -1,3 +1,15 @@
+-- Create users table if it doesn't exist
+CREATE TABLE IF NOT EXISTS public.users (
+    id UUID PRIMARY KEY REFERENCES auth.users(id),
+    email TEXT UNIQUE NOT NULL,
+    name TEXT,
+    google_id TEXT UNIQUE,
+    is_blocked BOOLEAN DEFAULT false,
+    role TEXT DEFAULT 'user',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
 -- Add new columns if they don't exist
 DO $$ 
 BEGIN

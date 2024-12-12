@@ -150,113 +150,25 @@ export function useAuth() {
     }
   };
 
-  const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-
   const signInWithGoogle = async () => {
     try {
       console.log('[useAuth] Iniciando login com Google');
-
-      // Carrega a biblioteca do Google
-      await new Promise<void>((resolve) => {
-        const script = document.createElement('script');
-        script.src = 'https://accounts.google.com/gsi/client';
-        script.async = true;
-        script.defer = true;
-        script.onload = () => resolve();
-        document.head.appendChild(script);
+      
+      const { data, error: authError } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
       });
 
-      // Inicializa o cliente Google
-      const response = await new Promise<any>((resolve, reject) => {
-        (window as any).google.accounts.oauth2.initTokenClient({
-          client_id: GOOGLE_CLIENT_ID,
-          scope: 'email profile',
-          callback: async (tokenResponse: any) => {
-            if (tokenResponse.error) {
-              reject(new Error(tokenResponse.error));
-              return;
-            }
+      if (authError) {
+        console.error('[useAuth] Erro na autenticação com Google:', authError);
+        throw authError;
+      }
 
-            try {
-              // Obtém os dados do usuário do Google
-              const userResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                headers: {
-                  'Authorization': `Bearer ${tokenResponse.access_token}`
-                }
-              });
-              
-              if (!userResponse.ok) {
-                throw new Error('Falha ao obter dados do usuário do Google');
-              }
-
-              const googleUser = await userResponse.json();
-              console.log('[useAuth] Dados do usuário Google:', googleUser);
-
-              // Verifica se o usuário existe no Supabase
-              const { data: existingUser, error: queryError } = await supabase
-                .from('users')
-                .select('*')
-                .eq('email', googleUser.email)
-                .single();
-
-              let userId;
-
-              if (!existingUser && queryError?.code === 'PGRST116') {
-                // Usuário não existe, vamos criar
-                const { data: newUser, error: createError } = await supabase
-                  .from('users')
-                  .insert([{
-                    email: googleUser.email,
-                    name: googleUser.name,
-                    is_blocked: false,
-                    google_id: googleUser.sub
-                  }])
-                  .select()
-                  .single();
-
-                if (createError) {
-                  console.error('[useAuth] Erro ao criar usuário:', createError);
-                  throw createError;
-                }
-
-                userId = newUser.id;
-                console.log('[useAuth] Novo usuário criado:', newUser);
-              } else if (queryError) {
-                console.error('[useAuth] Erro ao buscar usuário:', queryError);
-                throw queryError;
-              } else {
-                // Usuário existe
-                if (existingUser.is_blocked) {
-                  setUser({
-                    ...existingUser,
-                    is_blocked: true
-                  });
-                  navigate('/access');
-                  return;
-                }
-                userId = existingUser.id;
-              }
-
-              // Atualiza o estado com os dados do usuário
-              setUser({
-                id: userId,
-                email: googleUser.email,
-                name: googleUser.name,
-                is_blocked: false,
-                is_admin: false
-              });
-
-              navigate('/');
-              resolve(googleUser);
-            } catch (error) {
-              console.error('[useAuth] Erro no processo de autenticação:', error);
-              reject(error);
-            }
-          }
-        }).requestAccessToken();
-      });
-
-      return response;
+      // O Supabase irá redirecionar para a URL de callback após o login
+      // O restante do processo será tratado no evento onAuthStateChange
+      
     } catch (error) {
       console.error('[useAuth] Erro inesperado no login com Google:', error);
       errorLogger.logError(error as Error, 'Auth:signInWithGoogle');
@@ -265,82 +177,87 @@ export function useAuth() {
   };
 
   useEffect(() => {
-    // const handleAuthStateChange = async (event: string, session: any) => {
-    //   console.log('[Auth] Processando sessão:', session);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('[useAuth] Auth state changed:', event, session);
+      
+      if (event === 'SIGNED_IN' && session?.user) {
+        try {
+          // Verificar se o usuário já existe
+          const { data: existingUser, error: fetchError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
 
-    //   if (!session?.user) {
-    //     console.log('[Auth] Sem sessão ativa');
-    //     setUser(null);
-    //     return;
-    //   }
+          if (fetchError && fetchError.code !== 'PGRST116') {
+            console.error('[useAuth] Erro ao buscar usuário:', fetchError);
+            throw fetchError;
+          }
 
-    //   try {
-    //     // Verifica se o usuário existe na tabela users
-    //     const { data: existingUser, error: userError } = await supabase
-    //       .from('users')
-    //       .select('*')
-    //       .eq('id', session.user.id)
-    //       .single();
+          if (!existingUser) {
+            console.log('[useAuth] Criando novo usuário');
+            // Criar novo usuário
+            const { data: newUser, error: createError } = await supabase
+              .from('users')
+              .insert({
+                id: session.user.id,
+                email: session.user.email,
+                name: session.user.user_metadata.full_name,
+                google_id: session.user.user_metadata.sub,
+                is_blocked: false,
+                role: 'user'
+              })
+              .select()
+              .single();
 
-    //     if (userError && userError.code === 'PGRST116') {
-    //       // Usuário não existe, vamos criar
-    //       const { error: insertError } = await supabase
-    //         .from('users')
-    //         .insert({
-    //           id: session.user.id,
-    //           email: session.user.email,
-    //           name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0],
-    //           role: 'user',
-    //           is_blocked: false
-    //         });
+            if (createError) {
+              console.error('[useAuth] Erro ao criar usuário:', createError);
+              throw createError;
+            }
 
-    //       if (insertError) {
-    //         console.error('[Auth] Erro ao criar usuário:', insertError);
-    //         throw insertError;
-    //       }
+            setUser({
+              id: newUser.id,
+              email: newUser.email,
+              name: newUser.name,
+              role: newUser.role,
+              is_blocked: newUser.is_blocked
+            });
+          } else {
+            if (existingUser.is_blocked) {
+              setUser({
+                id: existingUser.id,
+                email: existingUser.email,
+                name: existingUser.name,
+                role: existingUser.role,
+                is_blocked: true
+              });
+              navigate('/access');
+              return;
+            }
 
-    //       setUser({
-    //         id: session.user.id,
-    //         email: session.user.email,
-    //         name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0],
-    //         role: 'user',
-    //         is_blocked: false
-    //       });
-    //     } else if (userError) {
-    //       console.error('[Auth] Erro ao verificar usuário:', userError);
-    //       throw userError;
-    //     } else {
-    //       // Usuário existe
-    //       if (existingUser.is_blocked) {
-    //         setUser({
-    //           ...existingUser,
-    //           is_blocked: true
-    //         });
-    //         navigate('/access');
-    //         return;
-    //       }
+            setUser({
+              id: existingUser.id,
+              email: existingUser.email,
+              name: existingUser.name,
+              role: existingUser.role,
+              is_blocked: false
+            });
+            navigate('/');
+          }
+        } catch (error) {
+          console.error('[useAuth] Erro ao processar usuário após login:', error);
+          errorLogger.logError(error as Error, 'Auth:onAuthStateChange');
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        navigate('/login');
+      }
+    });
 
-    //       setUser({
-    //         ...existingUser,
-    //         is_blocked: false
-    //       });
-    //     }
-
-    //     if (window.location.pathname === '/login') {
-    //       navigate('/');
-    //     }
-    //   } catch (error) {
-    //     console.error('[Auth] Erro ao processar autenticação:', error);
-    //     errorLogger.logError(error as Error, 'Auth:handleAuthStateChange');
-    //   }
-    // };
-
-    // const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
-
-    // return () => {
-    //   subscription.unsubscribe();
-    // };
-  }, [navigate, setUser]);
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   return {
     user,
