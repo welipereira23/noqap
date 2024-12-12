@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import errorLogger from '../../lib/errorLogger';
 import { Clock } from 'lucide-react';
@@ -17,6 +17,42 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Remover elementos antigos do Google, se existirem
+    const oldButton = document.querySelector('.g_id_signin');
+    const oldPrompt = document.querySelector('#g_id_onload');
+    if (oldButton) oldButton.remove();
+    if (oldPrompt) oldPrompt.remove();
+
+    // Criar novos elementos
+    const googleSignInWrapper = document.getElementById('google-signin-wrapper');
+    if (!googleSignInWrapper) return;
+
+    const googlePrompt = document.createElement('div');
+    googlePrompt.id = 'g_id_onload';
+    googlePrompt.dataset.client_id = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    googlePrompt.dataset.context = 'signin';
+    googlePrompt.dataset.ux_mode = 'popup';
+    googlePrompt.dataset.callback = 'handleGoogleLogin';
+    googlePrompt.dataset.auto_prompt = 'false';
+
+    const googleButton = document.createElement('div');
+    googleButton.className = 'g_id_signin';
+    googleButton.dataset.type = 'standard';
+    googleButton.dataset.shape = 'rectangular';
+    googleButton.dataset.theme = 'outline';
+    googleButton.dataset.text = 'signin_with';
+    googleButton.dataset.size = 'large';
+    googleButton.dataset.logo_alignment = 'left';
+    googleButton.dataset.width = '280';
+
+    googleSignInWrapper.appendChild(googlePrompt);
+    googleSignInWrapper.appendChild(googleButton);
+
+    // Adicionar callback ao window
+    window.handleGoogleLogin = handleGoogleLogin;
+  }, []);
 
   const handleGoogleLogin = async (response: any) => {
     try {
@@ -103,26 +139,7 @@ export function LoginPage() {
         {/* Card do Formulário */}
         <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 md:p-8 shadow-xl border border-white/20">
           {/* Botão do Google */}
-          <div>
-            <div 
-              id="g_id_onload"
-              data-client_id={import.meta.env.VITE_GOOGLE_CLIENT_ID}
-              data-context="signin"
-              data-ux_mode="popup"
-              data-callback={handleGoogleLogin}
-              data-auto_prompt="false"
-            />
-            <div 
-              className="g_id_signin"
-              data-type="standard"
-              data-shape="rectangular"
-              data-theme="outline"
-              data-text="signin_with"
-              data-size="large"
-              data-logo_alignment="left"
-              data-width="100%"
-            />
-          </div>
+          <div id="google-signin-wrapper" className="flex justify-center"></div>
 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
