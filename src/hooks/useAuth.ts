@@ -154,21 +154,21 @@ export function useAuth() {
     try {
       console.log('[useAuth] Iniciando login com Google');
       
-      const { data, error: authError } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent'
+          }
         }
       });
 
-      if (authError) {
-        console.error('[useAuth] Erro na autenticação com Google:', authError);
-        throw authError;
+      if (error) {
+        console.error('[useAuth] Erro na autenticação com Google:', error);
+        throw error;
       }
-
-      // O Supabase irá redirecionar para a URL de callback após o login
-      // O restante do processo será tratado no evento onAuthStateChange
-      
     } catch (error) {
       console.error('[useAuth] Erro inesperado no login com Google:', error);
       errorLogger.logError(error as Error, 'Auth:signInWithGoogle');
@@ -182,66 +182,39 @@ export function useAuth() {
       
       if (event === 'SIGNED_IN' && session?.user) {
         try {
-          // Verificar se o usuário já existe
-          const { data: existingUser, error: fetchError } = await supabase
+          // Buscar dados do usuário
+          const { data: userData, error: userError } = await supabase
             .from('users')
             .select('*')
             .eq('id', session.user.id)
             .single();
 
-          if (fetchError && fetchError.code !== 'PGRST116') {
-            console.error('[useAuth] Erro ao buscar usuário:', fetchError);
-            throw fetchError;
+          if (userError) {
+            console.error('[useAuth] Erro ao buscar usuário:', userError);
+            throw userError;
           }
 
-          if (!existingUser) {
-            console.log('[useAuth] Criando novo usuário');
-            // Criar novo usuário
-            const { data: newUser, error: createError } = await supabase
-              .from('users')
-              .insert({
-                id: session.user.id,
-                email: session.user.email,
-                name: session.user.user_metadata.full_name,
-                google_id: session.user.user_metadata.sub,
-                is_blocked: false,
-                role: 'user'
-              })
-              .select()
-              .single();
-
-            if (createError) {
-              console.error('[useAuth] Erro ao criar usuário:', createError);
-              throw createError;
-            }
-
+          if (userData.is_blocked) {
             setUser({
-              id: newUser.id,
-              email: newUser.email,
-              name: newUser.name,
-              role: newUser.role,
-              is_blocked: newUser.is_blocked
+              id: userData.id,
+              email: userData.email,
+              name: userData.name,
+              role: userData.role,
+              is_blocked: true
             });
-          } else {
-            if (existingUser.is_blocked) {
-              setUser({
-                id: existingUser.id,
-                email: existingUser.email,
-                name: existingUser.name,
-                role: existingUser.role,
-                is_blocked: true
-              });
-              navigate('/access');
-              return;
-            }
+            navigate('/access');
+            return;
+          }
 
-            setUser({
-              id: existingUser.id,
-              email: existingUser.email,
-              name: existingUser.name,
-              role: existingUser.role,
-              is_blocked: false
-            });
+          setUser({
+            id: userData.id,
+            email: userData.email,
+            name: userData.name,
+            role: userData.role,
+            is_blocked: false
+          });
+
+          if (window.location.pathname === '/login') {
             navigate('/');
           }
         } catch (error) {
@@ -257,7 +230,7 @@ export function useAuth() {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [navigate, setUser]);
 
   return {
     user,
