@@ -11,6 +11,7 @@ declare global {
           initialize: (config: any) => void;
           renderButton: (element: HTMLElement, config: any) => void;
           prompt: () => void;
+          cancel: () => void;
         };
       };
     };
@@ -55,11 +56,11 @@ export function LoginPage() {
       }
     };
 
-    // Carregar o script do Google
     const script = document.createElement('script');
     script.src = 'https://accounts.google.com/gsi/client';
     script.async = true;
     script.defer = true;
+    script.id = 'google-signin-script';
     script.onload = initializeGoogleSignIn;
     script.onerror = () => {
       console.error('[LoginPage] Erro ao carregar script do Google');
@@ -68,7 +69,13 @@ export function LoginPage() {
     document.body.appendChild(script);
 
     return () => {
-      document.body.removeChild(script);
+      const existingScript = document.getElementById('google-signin-script');
+      if (existingScript && existingScript.parentNode) {
+        existingScript.parentNode.removeChild(existingScript);
+      }
+      if (window.google?.accounts?.id) {
+        window.google.accounts.id.cancel();
+      }
     };
   }, []);
 
