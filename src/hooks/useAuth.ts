@@ -209,22 +209,6 @@ export function useAuth() {
         throw new Error('Dados incompletos do Google');
       }
 
-      // Primeiro, autenticar com o Supabase
-      const { data: authData, error: authError } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
-        },
-      });
-
-      if (authError) {
-        console.error('[useAuth] Erro na autenticação com Supabase:', authError);
-        throw authError;
-      }
-
       // Verifica se o usuário já existe pelo email
       const { data: existingUser, error: fetchError } = await supabase
         .from('users')
@@ -243,7 +227,6 @@ export function useAuth() {
         const { data: newUser, error: createError } = await supabase
           .from('users')
           .insert({
-            id: authData?.user?.id, // Usa o ID gerado pelo Supabase Auth
             email,
             name,
             google_id: sub,
