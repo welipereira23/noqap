@@ -209,8 +209,7 @@ export function useAuth() {
                     email: googleUser.email,
                     name: googleUser.name,
                     is_blocked: false,
-                    google_id: googleUser.sub,
-                    avatar_url: googleUser.picture
+                    google_id: googleUser.sub
                   }])
                   .select()
                   .single();
