@@ -150,20 +150,34 @@ export function useAuth() {
     }
   };
 
-  const signInWithGoogle = async (googleData: any) => {
+  interface GoogleUserData {
+    email: string;
+    name: string;
+    sub: string;
+    picture?: string;
+  }
+
+  const signInWithGoogle = async (googleData: GoogleUserData | undefined) => {
     try {
-      console.log('[useAuth] Dados do usuário Google:', googleData);
+      console.log('[useAuth] Recebido dados do Google:', googleData);
       
-      if (!googleData.email) {
-        console.error('[useAuth] Email do usuário não disponível');
-        throw new Error('Email do usuário não disponível');
+      if (!googleData) {
+        console.error('[useAuth] Dados do Google não fornecidos');
+        throw new Error('Dados do Google não fornecidos');
+      }
+
+      const { email, name, sub } = googleData;
+
+      if (!email || !name || !sub) {
+        console.error('[useAuth] Dados incompletos do Google:', { email, name, sub });
+        throw new Error('Dados incompletos do Google');
       }
 
       // Verifica se o usuário já existe pelo email
       const { data: existingUser, error: fetchError } = await supabase
         .from('users')
         .select('*')
-        .eq('email', googleData.email)
+        .eq('email', email)
         .single();
 
       if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = not found
@@ -177,9 +191,9 @@ export function useAuth() {
         const { data: newUser, error: createError } = await supabase
           .from('users')
           .insert({
-            email: googleData.email,
-            name: googleData.name,
-            google_id: googleData.sub,
+            email,
+            name,
+            google_id: sub,
             is_blocked: false,
             role: 'user'
           })
@@ -218,8 +232,8 @@ export function useAuth() {
         const { error: updateError } = await supabase
           .from('users')
           .update({
-            name: googleData.name,
-            google_id: googleData.sub
+            name,
+            google_id: sub
           })
           .eq('id', existingUser.id);
 
@@ -231,7 +245,7 @@ export function useAuth() {
         setUser({
           id: existingUser.id,
           email: existingUser.email,
-          name: googleData.name, // Usa o nome mais recente do Google
+          name, // Usa o nome mais recente do Google
           role: existingUser.role,
           is_blocked: false
         });
