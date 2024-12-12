@@ -150,20 +150,11 @@ export function useAuth() {
     }
   };
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (googleData: any) => {
     try {
-      console.log('[useAuth] Iniciando login com Google');
+      console.log('[useAuth] Dados do usuário Google:', googleData);
       
-      const { data: { user: googleUser }, error: authError } = await supabase.auth.signInWithOAuth({
-        provider: 'google'
-      });
-
-      if (authError) {
-        console.error('[useAuth] Erro na autenticação com Google:', authError);
-        throw authError;
-      }
-
-      if (!googleUser?.email) {
+      if (!googleData.email) {
         console.error('[useAuth] Email do usuário não disponível');
         throw new Error('Email do usuário não disponível');
       }
@@ -172,7 +163,7 @@ export function useAuth() {
       const { data: existingUser, error: fetchError } = await supabase
         .from('users')
         .select('*')
-        .eq('email', googleUser.email)
+        .eq('email', googleData.email)
         .single();
 
       if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = not found
@@ -186,9 +177,9 @@ export function useAuth() {
         const { data: newUser, error: createError } = await supabase
           .from('users')
           .insert({
-            email: googleUser.email,
-            name: googleUser.user_metadata?.full_name || googleUser.email.split('@')[0],
-            google_id: googleUser.user_metadata?.sub,
+            email: googleData.email,
+            name: googleData.name,
+            google_id: googleData.sub,
             is_blocked: false,
             role: 'user'
           })
@@ -223,10 +214,24 @@ export function useAuth() {
           return;
         }
 
+        // Atualiza os dados do usuário caso tenha mudado algo no Google
+        const { error: updateError } = await supabase
+          .from('users')
+          .update({
+            name: googleData.name,
+            google_id: googleData.sub
+          })
+          .eq('id', existingUser.id);
+
+        if (updateError) {
+          console.error('[useAuth] Erro ao atualizar usuário:', updateError);
+          throw updateError;
+        }
+
         setUser({
           id: existingUser.id,
           email: existingUser.email,
-          name: existingUser.name,
+          name: googleData.name, // Usa o nome mais recente do Google
           role: existingUser.role,
           is_blocked: false
         });
