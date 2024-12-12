@@ -2,13 +2,13 @@
 DROP TABLE IF EXISTS public.users;
 
 -- Create users table
-CREATE TABLE public.users (
+CREATE TABLE IF NOT EXISTS public.users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email TEXT UNIQUE NOT NULL,
     name TEXT,
     google_id TEXT UNIQUE,
-    is_blocked BOOLEAN DEFAULT false,
-    role TEXT DEFAULT 'user',
+    role TEXT NOT NULL DEFAULT 'user',
+    is_blocked BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
@@ -17,25 +17,28 @@ CREATE TABLE public.users (
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 
 -- Policies
-CREATE POLICY "Users can view their own data" ON public.users
-    FOR SELECT TO authenticated
-    USING (email = auth.jwt()->>'email');
+DROP POLICY IF EXISTS "Users can view their own data" ON public.users;
+DROP POLICY IF EXISTS "Users can update their own data" ON public.users;
+DROP POLICY IF EXISTS "Service role can manage all users" ON public.users;
 
-CREATE POLICY "Users can update their own data" ON public.users
-    FOR UPDATE TO authenticated
-    USING (email = auth.jwt()->>'email')
-    WITH CHECK (email = auth.jwt()->>'email');
+CREATE POLICY "Enable read access for all users" ON public.users
+    FOR SELECT USING (true);
 
-CREATE POLICY "Service role can manage all users" ON public.users
-    FOR ALL TO service_role
+CREATE POLICY "Enable insert for service role" ON public.users
+    FOR INSERT 
+    WITH CHECK (true);
+
+CREATE POLICY "Enable update for service role" ON public.users
+    FOR UPDATE
     USING (true)
     WITH CHECK (true);
 
 -- Trigger for updated_at
+DROP TRIGGER IF EXISTS handle_updated_at ON public.users;
 CREATE OR REPLACE FUNCTION handle_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
-    NEW.updated_at = NOW();
+    NEW.updated_at = timezone('utc'::text, now());
     RETURN NEW;
 END;
 $$ language 'plpgsql';

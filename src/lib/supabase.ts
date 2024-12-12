@@ -31,8 +31,12 @@ export type Tables = {
   }
 };
 
-if (!env.VITE_SUPABASE_URL || !env.VITE_SUPABASE_ANON_KEY) {
-  throw new Error('Missing Supabase credentials');
+if (!env.VITE_SUPABASE_URL) {
+  throw new Error('Missing Supabase URL');
+}
+
+if (!env.VITE_SUPABASE_ANON_KEY) {
+  throw new Error('Missing Supabase Anon Key');
 }
 
 // Criar uma única instância do cliente Supabase
@@ -48,7 +52,9 @@ export const supabase = createClient<Database>(
     },
     global: {
       headers: {
-        'X-Client-Info': 'bolt'
+        'X-Client-Info': 'bolt',
+        'apikey': env.VITE_SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${env.VITE_SUPABASE_ANON_KEY}`
       }
     }
   }
