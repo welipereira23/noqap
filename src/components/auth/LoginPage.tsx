@@ -49,8 +49,26 @@ export function LoginPage() {
       }
     };
 
+    // Reinicializar o botão do Google
+    if (window.google?.accounts?.id) {
+      window.google.accounts.id.initialize({
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+        callback: window.handleGoogleCallback,
+      });
+      
+      window.google.accounts.id.renderButton(
+        document.getElementById('googleButton'),
+        { theme: 'outline', size: 'large', width: 280 }
+      );
+    }
+
     return () => {
       window.handleGoogleCallback = undefined;
+      // Limpar o botão ao desmontar
+      const buttonContainer = document.getElementById('googleButton');
+      if (buttonContainer) {
+        buttonContainer.innerHTML = '';
+      }
     };
   }, [signInWithGoogle]);
 
@@ -112,22 +130,7 @@ export function LoginPage() {
         <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 md:p-8 shadow-xl border border-white/20">
           {/* Botão do Google */}
           <div className="flex justify-center mb-6">
-            <div 
-              id="g_id_onload"
-              data-client_id={import.meta.env.VITE_GOOGLE_CLIENT_ID}
-              data-callback="handleGoogleCallback"
-              data-auto_prompt="false"
-              data-auto_select="false"
-            ></div>
-            <div 
-              className="g_id_signin"
-              data-type="standard"
-              data-size="large"
-              data-theme="outline"
-              data-text="sign_in_with"
-              data-shape="rectangular"
-              data-width="280"
-            ></div>
+            <div id="googleButton"></div>
           </div>
 
           <div className="relative my-6">
