@@ -3,6 +3,7 @@ import { useStore } from '../store/useStore';
 import { errorLogger } from '../utils/errorLog';
 import { toast } from 'sonner';
 import { useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 
 export function useAuth() {
   const navigate = useNavigate();
