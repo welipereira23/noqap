@@ -191,9 +191,55 @@ export function useAuth() {
               const googleUser = await userResponse.json();
               console.log('[useAuth] Dados do usuário Google:', googleUser);
 
-              // Atualiza o estado com os dados do Google
+              // Verifica se o usuário existe no Supabase
+              const { data: existingUser, error: queryError } = await supabase
+                .from('users')
+                .select('*')
+                .eq('email', googleUser.email)
+                .single();
+
+              let userId;
+
+              if (!existingUser && queryError?.code === 'PGRST116') {
+                // Usuário não existe, vamos criar
+                const { data: newUser, error: createError } = await supabase
+                  .from('users')
+                  .insert([{
+                    email: googleUser.email,
+                    name: googleUser.name,
+                    is_blocked: false,
+                    google_id: googleUser.sub,
+                    avatar_url: googleUser.picture
+                  }])
+                  .select()
+                  .single();
+
+                if (createError) {
+                  console.error('[useAuth] Erro ao criar usuário:', createError);
+                  throw createError;
+                }
+
+                userId = newUser.id;
+                console.log('[useAuth] Novo usuário criado:', newUser);
+              } else if (queryError) {
+                console.error('[useAuth] Erro ao buscar usuário:', queryError);
+                throw queryError;
+              } else {
+                // Usuário existe
+                if (existingUser.is_blocked) {
+                  setUser({
+                    ...existingUser,
+                    is_blocked: true
+                  });
+                  navigate('/access');
+                  return;
+                }
+                userId = existingUser.id;
+              }
+
+              // Atualiza o estado com os dados do usuário
               setUser({
-                id: googleUser.sub, // ID único do Google
+                id: userId,
                 email: googleUser.email,
                 name: googleUser.name,
                 is_blocked: false,
