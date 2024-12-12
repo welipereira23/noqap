@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import errorLogger from '../../lib/errorLogger';
 import { Clock } from 'lucide-react';
@@ -27,8 +27,13 @@ export function LoginPage() {
   const [name, setName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [googleButtonLoaded, setGoogleButtonLoaded] = useState(false);
+  const googleButtonRef = useRef<HTMLDivElement>(null);
+  const scriptLoadedRef = useRef(false);
 
   useEffect(() => {
+    // Evita carregar o script múltiplas vezes
+    if (scriptLoadedRef.current) return;
+
     const initializeGoogleSignIn = () => {
       if (!window.google) return;
 
@@ -40,12 +45,11 @@ export function LoginPage() {
           cancel_on_tap_outside: true,
         });
 
-        const buttonContainer = document.getElementById('google-signin-button');
-        if (buttonContainer) {
-          window.google.accounts.id.renderButton(buttonContainer, {
+        if (googleButtonRef.current) {
+          window.google.accounts.id.renderButton(googleButtonRef.current, {
             theme: 'outline',
             size: 'large',
-            width: buttonContainer.offsetWidth,
+            width: googleButtonRef.current.offsetWidth,
             text: 'signin_with',
           });
           setGoogleButtonLoaded(true);
@@ -61,20 +65,33 @@ export function LoginPage() {
     script.async = true;
     script.defer = true;
     script.id = 'google-signin-script';
-    script.onload = initializeGoogleSignIn;
+    
+    script.onload = () => {
+      scriptLoadedRef.current = true;
+      initializeGoogleSignIn();
+    };
+    
     script.onerror = () => {
       console.error('[LoginPage] Erro ao carregar script do Google');
       setError('Erro ao carregar login do Google');
+      scriptLoadedRef.current = false;
     };
+
+    // Remove qualquer script existente antes de adicionar o novo
+    const existingScript = document.getElementById('google-signin-script');
+    if (existingScript) {
+      existingScript.remove();
+    }
+
     document.body.appendChild(script);
 
     return () => {
-      const existingScript = document.getElementById('google-signin-script');
-      if (existingScript && existingScript.parentNode) {
-        existingScript.parentNode.removeChild(existingScript);
-      }
       if (window.google?.accounts?.id) {
-        window.google.accounts.id.cancel();
+        try {
+          window.google.accounts.id.cancel();
+        } catch (error) {
+          console.error('[LoginPage] Erro ao cancelar Google Sign-In:', error);
+        }
       }
     };
   }, []);
@@ -165,7 +182,7 @@ export function LoginPage() {
         <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 md:p-8 shadow-xl border border-white/20">
           {/* Botão do Google */}
           <div 
-            id="google-signin-button" 
+            ref={googleButtonRef}
             className="w-full h-10 flex justify-center items-center"
           >
             {!googleButtonLoaded && (
