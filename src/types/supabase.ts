@@ -5,21 +5,27 @@ export interface Database {
         Row: {
           id: string;
           email: string;
-          name: string;
-          stripe_customer_id: string | null;
+          name: string | null;
+          role: string;
+          is_blocked: boolean;
+          last_unblocked_at: string | null;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id?: string;
           email: string;
-          name: string;
-          stripe_customer_id?: string | null;
+          name?: string | null;
+          role?: string;
+          is_blocked?: boolean;
+          last_unblocked_at?: string | null;
         };
         Update: {
           email?: string;
-          name?: string;
-          stripe_customer_id?: string | null;
+          name?: string | null;
+          role?: string;
+          is_blocked?: boolean;
+          last_unblocked_at?: string | null;
         };
       };
       subscriptions: {

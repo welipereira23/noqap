@@ -10,6 +10,7 @@ type User = {
   id: string;
   email: string;
   name: string;
+  role: string;
   is_blocked: boolean;
   created_at: string;
   last_unblocked_at: string | null;
@@ -48,7 +49,7 @@ export function UserList() {
       console.log('[UserList] Carregando usuários...');
       const { data, error } = await supabase
         .from('users')
-        .select('id, email, name, is_blocked, created_at, last_unblocked_at, updated_at')
+        .select('id, email, name, role, is_blocked, created_at, last_unblocked_at, updated_at')
         .order('email');
 
       if (error) {
