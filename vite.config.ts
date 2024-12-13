@@ -10,10 +10,10 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
-        name: 'Bolt Time Tracking',
-        short_name: 'Bolt',
+        name: 'NoQap - Controle de Horas',
+        short_name: 'NoQap',
         description: 'Sistema de controle de ponto e gestão de tempo',
-        theme_color: '#000000',
+        theme_color: '#4F46E5',
         icons: [
           {
             src: 'favicon-32x32.png',
