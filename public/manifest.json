@@ -7,7 +7,7 @@
   "scope": "/",
   "id": "/",
   "display": "standalone",
-  "display_override": ["window-controls-overlay"],
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "orientation": "portrait",
   "background_color": "#4F46E5",
   "theme_color": "#4F46E5",
@@ -20,19 +20,19 @@
       "src": "clock.svg",
       "type": "image/svg+xml",
       "sizes": "512x512",
-      "purpose": "any maskable monochrome"
-    },
-    {
-      "src": "android-chrome-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "android-chrome-512x512.png",
+      "src": "clock.svg",
+      "type": "image/svg+xml",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
+      "purpose": "maskable"
+    },
+    {
+      "src": "clock.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512",
+      "purpose": "monochrome"
     }
   ],
   "screenshots": [
