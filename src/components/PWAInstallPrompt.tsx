@@ -17,32 +17,34 @@ const PromptContent = memo(({
   handleClose: () => void;
 }) => (
   <div className="fixed top-0 left-0 right-0 z-50 animate-slideDown">
-    <div className="bg-gradient-to-r from-primary/10 to-primary/5 border-b border-primary/20 shadow-lg backdrop-blur-sm">
-      <div className="max-w-3xl mx-auto flex items-center justify-between gap-4 px-4 py-3">
-        <div className="flex items-center gap-3 flex-1">
-          {instructions.icon}
-          <div>
-            <h3 className="font-semibold text-primary-foreground/90">
+    <div className="bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-lg">
+      <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4 p-3 sm:p-4">
+        <div className="flex items-center gap-3 flex-1 w-full">
+          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center">
+            {instructions.icon}
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-semibold text-gray-900 truncate">
               {instructions.title}
             </h3>
-            <p className="text-sm text-primary-foreground/70">
+            <p className="text-sm text-gray-600 line-clamp-2">
               {instructions.description}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
           <button
             onClick={isIOS ? handleClose : handleInstallClick}
-            className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg font-medium transition-all duration-200 shadow-sm hover:shadow-md active:scale-95"
+            className="flex-1 sm:flex-none px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-all duration-200 shadow-sm hover:shadow-md active:scale-95 text-sm sm:text-base"
           >
             {instructions.buttonText}
           </button>
           <button
             onClick={handleClose}
-            className="p-1.5 hover:bg-primary/10 rounded-full transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
             aria-label="Fechar"
           >
-            <X className="h-5 w-5 text-primary-foreground/70" />
+            <X className="h-5 w-5 text-gray-500" />
           </button>
         </div>
       </div>
@@ -59,7 +61,7 @@ export function PWAInstallPrompt() {
   const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
 
-  // Detecta o modo standalone e navegador imediatamente
+  // Detecta o modo standalone e navegador uma única vez
   useEffect(() => {
     const detectBrowser = () => {
       const ua = navigator.userAgent.toLowerCase();
@@ -96,7 +98,6 @@ export function PWAInstallPrompt() {
       setShowPrompt(true);
     };
 
-    // Tenta mostrar imediatamente se o evento já aconteceu
     window.addEventListener('beforeinstallprompt', handler);
     
     // Verifica se o evento já foi disparado
@@ -126,52 +127,21 @@ export function PWAInstallPrompt() {
 
   if (!showPrompt || isStandalone) return null;
 
-  const getInstructions = () => {
-    if (isIOS) {
-      return {
-        icon: <Share2 className="h-6 w-6 text-primary" />,
-        title: "Instale o NoQap no seu iPhone/iPad",
-        description: "Toque no botão 'Compartilhar' e depois em 'Adicionar à Tela de Início'",
-        buttonText: "Ver Como Fazer"
+  const instructions = isIOS 
+    ? {
+        icon: <Share2 className="h-5 w-5 text-indigo-600" />,
+        title: "Instale o NoQap",
+        description: "Toque em 'Compartilhar' e depois 'Adicionar à Tela de Início'",
+        buttonText: "Entendi"
+      }
+    : {
+        icon: <Download className="h-5 w-5 text-indigo-600" />,
+        title: browser === 'brave' ? "Instale o NoQap no Brave" : "Instale o NoQap",
+        description: browser === 'brave' 
+          ? "Clique no botão de instalação na barra de endereço"
+          : "Adicione à tela inicial para acesso rápido",
+        buttonText: "Instalar App"
       };
-    }
-
-    switch (browser) {
-      case 'brave':
-        return {
-          icon: <Download className="h-6 w-6 text-primary" />,
-          title: "Instale o NoQap no Brave",
-          description: "Clique no botão de instalação na barra de endereço",
-          buttonText: "Instalar App"
-        };
-      case 'firefox':
-        return {
-          icon: <Download className="h-6 w-6 text-primary" />,
-          title: "Instale o NoQap no Firefox",
-          description: "Clique nos três pontos (...) e depois em 'Instalar'",
-          buttonText: "Instalar App"
-        };
-      case 'edge':
-      case 'chrome':
-      case 'opera':
-      case 'samsung':
-        return {
-          icon: <Download className="h-6 w-6 text-primary" />,
-          title: "Instale o NoQap para acesso rápido",
-          description: "Acesse rapidamente direto do seu dispositivo",
-          buttonText: "Instalar App"
-        };
-      default:
-        return {
-          icon: <Download className="h-6 w-6 text-primary" />,
-          title: "Instale o NoQap no seu dispositivo",
-          description: "Adicione à tela inicial para acesso rápido",
-          buttonText: "Instalar App"
-        };
-    }
-  };
-
-  const instructions = getInstructions();
 
   return (
     <PromptContent

@@ -13,17 +13,26 @@ export default defineConfig({
         name: 'NoQap - Controle de Horas',
         short_name: 'NoQap',
         description: 'Sistema de controle de ponto e gestão de tempo',
+        start_url: '/',
+        display: 'standalone',
+        background_color: '#4F46E5',
         theme_color: '#4F46E5',
         icons: [
           {
-            src: 'favicon-32x32.png',
-            sizes: '32x32',
+            src: 'android-chrome-192x192.png',
+            sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: 'apple-touch-icon.png',
-            sizes: '180x180',
+            src: 'android-chrome-512x512.png',
+            sizes: '512x512',
             type: 'image/png'
+          },
+          {
+            src: 'maskable-icon.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
           }
         ]
       },

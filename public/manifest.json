@@ -2,10 +2,19 @@
   "name": "NoQap - Controle de Horas",
   "short_name": "NoQap",
   "description": "Sistema de controle de ponto e gestão de tempo",
-  "start_url": "/",
+  "categories": ["productivity", "business", "utilities"],
+  "start_url": "/?source=pwa",
+  "id": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#4F46E5",
   "theme_color": "#4F46E5",
+  "launch_handler": {
+    "client_mode": ["navigate-existing", "auto"]
+  },
+  "scope": "/",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "favicon-32x32.png",
@@ -15,7 +24,56 @@
     {
       "src": "apple-touch-icon.png",
       "sizes": "180x180",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "maskable-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot1.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Tela inicial do NoQap"
+    },
+    {
+      "src": "screenshot2.png",
+      "sizes": "720x1280",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Visão mobile do NoQap"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Registrar Ponto",
+      "url": "/",
+      "description": "Registre seu ponto rapidamente",
+      "icons": [
+        {
+          "src": "clock-icon.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }
