@@ -112,7 +112,7 @@ const LoginForm = memo(({
     )}
 
     {error && (
-      <div className="text-sm text-red-200 bg-red-500/20 p-3 rounded-xl border border-red-500/30">
+      <div className="text-red-300 text-sm text-center">
         {error}
       </div>
     )}
@@ -120,14 +120,21 @@ const LoginForm = memo(({
     <button
       type="submit"
       disabled={isLoading}
-      className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl text-sm font-medium text-indigo-700 bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-600 disabled:opacity-50 transition-colors will-change-transform"
+      className="w-full py-3 px-4 bg-white text-indigo-600 rounded-xl font-semibold hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed will-change-transform"
     >
-      {isLoading ? (
-        <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-      ) : (
-        isSignUp ? 'Criar conta' : 'Entrar'
-      )}
+      {isLoading ? 'Carregando...' : isSignUp ? 'Criar conta' : 'Entrar'}
     </button>
+
+    <div className="relative">
+      <div className="absolute inset-0 flex items-center">
+        <div className="w-full border-t border-white/20"></div>
+      </div>
+      <div className="relative flex justify-center text-sm">
+        <span className="px-2 bg-transparent text-white/50">ou continue com</span>
+      </div>
+    </div>
+
+    <div id="googleButton" className="flex justify-center will-change-transform"></div>
   </form>
 ));
 

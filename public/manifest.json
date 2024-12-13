@@ -7,7 +7,7 @@
   "scope": "/",
   "id": "/",
   "display": "standalone",
-  "display_override": ["window-controls-overlay", "standalone"],
+  "display_override": ["window-controls-overlay"],
   "orientation": "portrait",
   "background_color": "#4F46E5",
   "theme_color": "#4F46E5",
@@ -20,7 +20,7 @@
       "src": "clock.svg",
       "type": "image/svg+xml",
       "sizes": "512x512",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
       "src": "android-chrome-192x192.png",
@@ -33,12 +33,6 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
-    },
-    {
-      "src": "maskable-icon.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
     }
   ],
   "screenshots": [
@@ -48,27 +42,6 @@
       "type": "image/png",
       "form_factor": "wide",
       "label": "Tela inicial do NoQap"
-    },
-    {
-      "src": "screenshot2.png",
-      "sizes": "720x1280",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Visão mobile do NoQap"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "Registrar Ponto",
-      "url": "/",
-      "description": "Registre seu ponto rapidamente",
-      "icons": [
-        {
-          "src": "clock-icon.png",
-          "sizes": "96x96",
-          "type": "image/png"
-        }
-      ]
     }
   ]
 }
