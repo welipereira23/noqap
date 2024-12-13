@@ -10,12 +10,17 @@
     <link rel="manifest" href="/manifest.json">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
     <!-- Icons -->
-    <link rel="icon" type="image/png" href="/android-chrome-192x192.png">
+    <link rel="icon" type="image/svg+xml" href="/clock.svg">
+    <link rel="alternate icon" type="image/png" href="/android-chrome-192x192.png">
     <link rel="apple-touch-icon" href="/android-chrome-192x192.png">
     
     <title>NoQap - Controle de Horas</title>
+    
+    <!-- Google Sign-In -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>
       function handleGoogleLogin(response) {
         if (window.handleGoogleCallback) {
