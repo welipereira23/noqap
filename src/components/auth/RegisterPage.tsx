@@ -1,8 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { toast } from 'sonner';
+
+// Componente do background memoizado para evitar re-renders desnecessários
+const Background = memo(() => (
+  <div className="fixed inset-0">
+    <div className="absolute inset-0 bg-gradient-to-b from-indigo-500 to-indigo-800" />
+    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_white_1px,_transparent_1px)] bg-[length:24px_24px] opacity-10" />
+  </div>
+));
+
+Background.displayName = 'Background';
 
 export function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -42,17 +52,14 @@ export function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen relative bg-gradient-to-b from-indigo-500 to-indigo-800 flex flex-col justify-center px-4 py-8 md:py-12">
-      {/* Padrão de fundo decorativo */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_white_1px,_transparent_1px)] bg-[length:24px_24px]" />
-      </div>
+    <div className="min-h-screen relative flex flex-col justify-center px-4 py-8 md:py-12 overflow-hidden">
+      <Background />
       
       {/* Conteúdo */}
       <div className="relative z-10 w-full max-w-md mx-auto">
         {/* Logo e Título */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/10 backdrop-blur-sm mb-6">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/10 mb-6 transform-gpu">
             <Clock className="h-8 w-8 text-white" />
           </div>
           <h2 className="text-3xl font-bold tracking-tight text-white mb-2">
@@ -67,7 +74,7 @@ export function RegisterPage() {
         </div>
 
         {/* Card do Formulário */}
-        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 md:p-8 shadow-xl border border-white/20">
+        <div className="bg-white/10 rounded-2xl p-6 md:p-8 shadow-xl border border-white/20 transform-gpu">
           <form className="space-y-5" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-white/90 mb-1.5">
@@ -79,7 +86,7 @@ export function RegisterPage() {
                 type="email"
                 autoComplete="email"
                 required
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent text-sm"
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent text-sm transform-gpu"
                 placeholder="seu@email.com"
               />
             </div>
@@ -93,7 +100,7 @@ export function RegisterPage() {
                 name="password"
                 type="password"
                 required
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent text-sm"
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent text-sm transform-gpu"
                 placeholder="••••••••"
               />
             </div>
@@ -107,7 +114,7 @@ export function RegisterPage() {
                 name="confirmPassword"
                 type="password"
                 required
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent text-sm"
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent text-sm transform-gpu"
                 placeholder="••••••••"
               />
             </div>
@@ -121,7 +128,7 @@ export function RegisterPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl text-sm font-medium text-indigo-700 bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-600 disabled:opacity-50 transition-colors"
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl text-sm font-medium text-indigo-700 bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-600 disabled:opacity-50 transition-colors transform-gpu"
             >
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>

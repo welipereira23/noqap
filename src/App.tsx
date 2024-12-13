@@ -15,12 +15,14 @@ import { UserList } from './components/admin/UserList';
 import { queryClient } from './lib/api';
 import AuthCallback from './components/auth/AuthCallback';
 import { GoogleScriptLoader } from './components/GoogleScriptLoader';
+import { PWAInstallPrompt } from './components/PWAInstallPrompt';
 
 function App() {
   return (
     <>
       <GoogleScriptLoader />
       <Toaster position="top-right" />
+      <PWAInstallPrompt />
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <Routes>
